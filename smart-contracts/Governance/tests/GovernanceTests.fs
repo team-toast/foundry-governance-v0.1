@@ -1,4 +1,4 @@
-module dEthTests
+module GovernanceTests
 
 open System
 open System.Numerics
@@ -31,27 +31,27 @@ let ``initializes with correct initial supply`` () =
     let gFryCon = getGFryContract()
 
     let totSup1 = gFryCon.totalSupplyQuery()
-    let balance1 = gFryCon.balanceOfQuery("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")
+    let balance1 = gFryCon.balanceOfQuery(hardhatAccount)
     printfn "%O" totSup1
-    printf "--Mint 100--\n"
-    printf "Balance:\n"
-    printfn "%O" balance1
-    let mintTX = gFryCon.mint("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266", "0x64")
-    printf "--Total supply--\n"
-    let totSup2 = gFryCon.totalSupplyQuery()
-    printfn "%O" totSup2
-    printf "--Burn 50--\n"
-    let burnTX = gFryCon.burn("0x32")
-    printf "--Total supply--\n"
-    let totSup3 = gFryCon.totalSupplyQuery()
-    printfn "%O" totSup3
-    let balance2 = gFryCon.balanceOfQuery("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")
-    printf "Balance:\n"
-    printfn "%O" balance2
-    printf "----------------\n"
+    // printf "--Mint 100--\n"
+    // printf "Balance:\n"
+    // printfn "%O" balance1
+    // let mintTX = gFryCon.mint(hardhatAccount, "0x64")
+    // printf "--Total supply--\n"
+    // let totSup2 = gFryCon.totalSupplyQuery()
+    // printfn "%O" totSup2
+    // printf "--Burn 50--\n"
+    // let burnTX = gFryCon.burn("0x32")
+    // printf "--Total supply--\n"
+    // let totSup3 = gFryCon.totalSupplyQuery()
+    // printfn "%O" totSup3
+    // let balance2 = gFryCon.balanceOfQuery(hardhatAccount)
+    // printf "Balance:\n"
+    // printfn "%O" balance2
+    // printf "----------------\n"
 
-
-    True
+    let zero = bigint 0;
+    should equal zero (gFryCon.totalSupplyQuery())
     // let authority, contract = getDEthContractAndAuthority()
 
     // // check the rights

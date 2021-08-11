@@ -1,6 +1,6 @@
 {
-  "name": "deth",
-  "version": "2.0.0",
+  "name": "governance",
+  "version": "0.0.1",
   "description": "derived ether",
   "main": "hardhat.config.js",
   "dependencies": {
@@ -13,14 +13,6 @@
     "ethers": "^5.3.0",
     "hardhat": "^2.3.0",
     "truffle": "^5.3.8"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/team-toast/deth.git"
-  },
-  "author": "Team Toast",
-  "bugs": {
-    "url": "https://github.com/team-toast/deth/issues"
-  },
-  "homepage": "https://github.com/team-toast/deth#readme"
+  }
+  
 }

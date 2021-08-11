@@ -157,6 +157,7 @@ let rinkebyURI = "https://rinkeby.infura.io/v3/c48bc466281c4fefb3decad63c4fc815"
 let ganacheMnemonic = "join topple vapor pepper sell enter isolate pact syrup shoulder route token"
 let hardhatPrivKey = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 let hardhatPrivKey2 = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+let hardhatAccount = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 let rinkebyPrivKey = "5ca35a65adbd49af639a3686d7d438dba1bcef97cf1593cd5dd8fd79ca89fa3c"
 let blockNumber = 12330245UL
 
@@ -172,6 +173,11 @@ let shouldEqualIgnoringCase (a: string) (b: string) =
     let aString = a |> string
     let bString = b |> string
     should equal (aString.ToLower()) (bString.ToLower())
+
+let shouldEqualInt (a: bigint) (b: bigint) =
+    let aInt = a 
+    let bInt = b 
+    should equal aInt bInt
 
 let shouldSucceed (txr: TransactionReceipt) = txr.Status |> should equal (hexBigInt 1UL)
 let shouldFail (txr: TransactionReceipt) = txr.Status |> should equal (hexBigInt 0UL)
