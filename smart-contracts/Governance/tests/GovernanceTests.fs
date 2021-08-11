@@ -20,9 +20,6 @@ type System.String with
    member s1.icompare(s2: string) =
      System.String.Equals(s1, s2, StringComparison.CurrentCultureIgnoreCase);
 
-
-//---------Test Testing------------
-
 [<Specification("gFry", "constructor", 0)>]
 [<Fact>]
 let ``initializes with correct initial supply`` () =
@@ -30,51 +27,39 @@ let ``initializes with correct initial supply`` () =
 
     let gFryCon = getGFryContract()
 
-    let totSup1 = gFryCon.totalSupplyQuery()
-    let balance1 = gFryCon.balanceOfQuery(hardhatAccount)
-    printfn "%O" totSup1
-    // printf "--Mint 100--\n"
-    // printf "Balance:\n"
-    // printfn "%O" balance1
-    // let mintTX = gFryCon.mint(hardhatAccount, "0x64")
-    // printf "--Total supply--\n"
-    // let totSup2 = gFryCon.totalSupplyQuery()
-    // printfn "%O" totSup2
-    // printf "--Burn 50--\n"
-    // let burnTX = gFryCon.burn("0x32")
-    // printf "--Total supply--\n"
-    // let totSup3 = gFryCon.totalSupplyQuery()
-    // printfn "%O" totSup3
-    // let balance2 = gFryCon.balanceOfQuery(hardhatAccount)
-    // printf "Balance:\n"
-    // printfn "%O" balance2
-    // printf "----------------\n"
-
     let zero = bigint 0;
     should equal zero (gFryCon.totalSupplyQuery())
-    // let authority, contract = getDEthContractAndAuthority()
 
-    // // check the rights
-    // let functionName = Web3.Sha3("changeSettings(uint256,uint256,uint256)").Substring(0, 8).HexToByteArray()
-    // let canCall = authority.canCallQuery (foundryTreasury, contract.Address, functionName)
+[<Specification("gFry", "mint", 0)>]
+[<Fact>]
+let ``Non gFry deployer account can not mint`` () =
+    restore ()
 
-    // // check the balance of initialRecipient
-    // let balanceOfInitialRecipient = contract.balanceOfQuery(initialRecipient)
+    let gFryCon = getGFryContract()
+    let account = Account(hardhatPrivKey2)
 
-    // shouldEqualIgnoringCase gulper <| contract.gulperQuery()
-    // shouldEqualIgnoringCase proxyCache <| contract.cacheQuery()
-    // should equal cdpId <| contract.cdpIdQuery()
-    // shouldEqualIgnoringCase makerManager <| contract.makerManagerQuery()
-    // shouldEqualIgnoringCase ethGemJoin <| contract.ethGemJoinQuery()
-    // shouldEqualIgnoringCase saverProxy <| contract.saverProxyQuery()
-    // shouldEqualIgnoringCase saverProxyActions <| contract.saverProxyActionsQuery()
-    // shouldEqualIgnoringCase oracleContractMainnet.Address <| contract.oracleQuery()
-    // should be True canCall
-    // should greaterThan BigInteger.Zero balanceOfInitialRecipient
-    // dEthContract.minRedemptionRatioQuery() |> should equal <| (bigint 160) * ratio
+    let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
+    let data = gFryCon.mintData(account.Address, "10")
+    let receipt = debug.Forward(gFryCon.Address,  data)
+    let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
+    forwardEvent |> shouldRevertWithMessage "Comp::_mint: That account cannot mint"
+    let zero = bigint 0;
+    should equal zero (gFryCon.totalSupplyQuery())
 
-//---------End Test Testing------------
+// [<Specification("dEth", "changeGulper", 1)>]
+// [<Fact>]
+// let ``cannot be changed by non-owner`` () = 
+//     restore ()
+//     let contract = getDEthContract ()
+//     let account = Account(hardhatPrivKey2)
+//     let oldGulper = contract.gulperQuery()
 
+//     let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
+//     let data = contract.changeGulperData(account.Address)
+//     let receipt = debug.Forward(contract.Address,  data)
+//     let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
+//     forwardEvent |> shouldRevertWithUnknownMessage
+//     shouldEqualIgnoringCase oldGulper <| contract.gulperQuery()
 
 // [<Specification("dEth", "constructor", 0)>]
 // [<Fact>]
@@ -169,21 +154,6 @@ let ``initializes with correct initial supply`` () =
 //     let randomAddress = makeAccount().Address
 //     contract.changeGulper(randomAddress) |> ignore
 //     shouldEqualIgnoringCase randomAddress <| contract.gulperQuery()
-
-// [<Specification("dEth", "changeGulper", 1)>]
-// [<Fact>]
-// let ``cannot be changed by non-owner`` () = 
-//     restore ()
-//     let contract = getDEthContract ()
-//     let account = Account(hardhatPrivKey2)
-//     let oldGulper = contract.gulperQuery()
-
-//     let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
-//     let data = contract.changeGulperData(account.Address)
-//     let receipt = debug.Forward(contract.Address,  data)
-//     let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
-//     forwardEvent |> shouldRevertWithUnknownMessage
-//     shouldEqualIgnoringCase oldGulper <| contract.gulperQuery()
 
 // let giveCDPToDSProxyTestBase shouldThrow = 
 //     restore ()

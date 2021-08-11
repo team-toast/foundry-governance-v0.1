@@ -232,3 +232,36 @@ let alchemyKey = ConfigurationBuilder().AddUserSecrets<HardhatForkInput>().Build
 ethConn.HardhatResetAsync blockNumber (sprintf "https://eth-mainnet.alchemyapi.io/v2/%s" alchemyKey)
 |> runNow
 |> should equal true
+
+type Debug(ethConn: EthereumConnection) =
+    member val public EthConn = ethConn
+    member val public  DebugContract = Contracts.DebugContract(ethConn.GetWeb3)
+
+    member this.Forward(toAddress, data:string) =
+        this.DebugContract.forward(toAddress, data.HexToByteArray())
+
+    member this.DecodeForwardedEvents(receipt: TransactionReceipt) =
+        receipt.DecodeAllEvents<Contracts.DebugContract.ForwardedEventDTO>() |> Seq.map (fun i -> i.Event)
+        
+
+    member this.BlockTimestamp:BigInteger = 
+        this.DebugContract.blockTimestampQuery()
+        
+type Contracts.DebugContract.ForwardedEventDTO with
+    member this.ResultAsRevertMessage =
+        match this._success with
+        | true -> None
+        | _ -> Some(Encoding.ASCII.GetString(this._resultData))
+      
+let shouldRevertWithMessage expectedMessage (forwardedEvent: Contracts.DebugContract.ForwardedEventDTO) =
+    printf "EVENT \n"
+    printfn "%O" forwardedEvent.ResultAsRevertMessage
+    match forwardedEvent.ResultAsRevertMessage with
+    | None -> failwith "not a revert message"
+    | Some actualMessage -> actualMessage |> should haveSubstring expectedMessage
+
+let shouldRevertWithUnknownMessage (forwardedEvent: Contracts.DebugContract.ForwardedEventDTO) =
+    shouldRevertWithMessage "" forwardedEvent
+
+
+
