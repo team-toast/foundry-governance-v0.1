@@ -34,6 +34,7 @@ contract gFRY is Comp
         require(msg.sender != address(0), "Comp::_burn: cannot burn from the zero address");
 
         balances[msg.sender] = sub96(balances[msg.sender], amount, "Comp::_burn: burn underflows");
+        totalSupply = sub96(uint96(totalSupply), amount, "Comp::_burn: totalSupply burn underflows");
         emit Transfer(msg.sender, address(0x0), amount);
 
         _moveDelegates(msg.sender, address(0x0), amount);

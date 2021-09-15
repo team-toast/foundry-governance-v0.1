@@ -50,39 +50,6 @@ let ``Non gFry deployer account can not mint`` () =
 
 [<Specification("gFry", "mint", 1)>]
 [<Fact>]
-let ``Can mint amount 0`` () =
-    restore ()
-
-    let gFryCon = getGFryContract()
-    let account = Account(hardhatPrivKey)
-    let account2 = Account(hardhatPrivKey2)
-    // printfn "Address of Account: %O" account.Address
-
-    let data = gFryCon.mint(account2.Address, "0")
-    printfn "TX: %O" data.TransactionHash
-
-    let zero = bigint 0;
-    should equal zero (gFryCon.totalSupplyQuery())
-
-[<Specification("gFry", "mint", 1)>]
-[<Fact>]
-let ``Can mint positive amount`` () =
-    restore ()
-
-    let gFryCon = getGFryContract()
-    //let governator = getGovernatorContract(gFryCon.Address)
-    let account = Account(hardhatPrivKey)
-    let account2 = Account(hardhatPrivKey2)
-    // printfn "Address of Account: %O" account.Address
-
-    let data = gFryCon.mint(account2.Address, "A")
-    printfn "TX: %O" data.TransactionHash
-
-    let ten = bigint 10;
-    should equal ten (gFryCon.totalSupplyQuery())
-
-[<Specification("gFry", "mint", 1)>]
-[<Fact>]
 let ``Can't mint to the zero address`` () =
     restore ()
 
@@ -92,9 +59,134 @@ let ``Can't mint to the zero address`` () =
         gFryCon.mint(zeroAddress, "A") |> ignore
         failwith "Should not be able to mint to zero address"
     with ex ->
-        printfn "%O" ex
+        //printfn "%O" ex
         ex.Message.ToLowerInvariant().Contains("cannot mint to the zero address") 
         |> should equal true
+
+// [<Specification("gFry", "mint", 1)>]
+// [<Fact>]
+// let ``Can't mint bigger than uint96 max`` () =
+//     restore ()
+
+//     let gFryCon = getGFryContract()
+//     let smallNumber = 1000.0
+//     let bignumber = (7.922816251**28.0).ToString()
+//     let hexStringMax = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+//     let hexStringOne = "ffffffffffffffffffffffff"
+//     let hexStringTwo = "1000000000000000000000000"
+//     //let bignumberStr = bignumber.ToString
+//     // try
+//     gFryCon.mint(hardhatAccount, hexStringTwo) |> ignore
+//     // gFryCon.mint(hardhatAccount, hexStringTwo) |> ignore
+
+//     let gFryBalance = gFryCon.balanceOfQuery(hardhatAccount)
+    
+//     printfn "gFry Balance %O" gFryBalance
+//     //     failwith "Should not be able to mint to zero address"
+//     // with ex ->
+//     //     printfn "%O" ex
+//     //     ex.Message.ToLowerInvariant().Contains("cannot mint to the zero address") 
+//     //     |> should equal true
+
+[<Specification("gFry", "mint", 1)>]
+[<Fact>]
+let ``Can mint positive amount`` () =
+    restore ()
+
+    let gFryConnection =  Contracts.gFRYContract(ethConn.GetWeb3)
+    let compareBigInt = bigint 16;
+    let toMint = 10.0
+    let amountToMint = toMint
+    let amountToMintStr = amountToMint.ToString()
+    let mintTx = gFryConnection.mint(hardhatAccount,  amountToMintStr)
+    mintTx |> shouldSucceed
+    let gFryBalance = gFryConnection.balanceOfQuery(hardhatAccount)
+    printfn "gFry Balance %O" mintTx
+
+    let event = mintTx.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
+    event.from |> should equal zeroAddress
+    event.amount |> should equal compareBigInt
+    gFryBalance |> should equal compareBigInt
+
+[<Specification("gFry", "burn", 1)>]
+[<Fact>]
+let ``Can't burn of not deployer`` () =
+    restore ()
+
+    let gFryConnection =  Contracts.gFRYContract(ethConn.GetWeb3)
+    let compareBigInt = bigint 16;
+    let toMint = 100.0
+    let amountToMint = toMint
+    let amountToMintStr = amountToMint.ToString()
+    let mintTx = gFryConnection.mint(hardhatAccount,  amountToMintStr)
+
+    gFryConnection.balanceOfQuery(hardhatAccount)
+    |> printfn "Post Mint Balance: %O" 
+    gFryConnection.totalSupplyQuery()
+    |> printfn "Post total Supply: %O" 
+
+    let burnTx = gFryConnection.burn("10")
+    gFryConnection.balanceOfQuery(hardhatAccount)
+    |> printfn "Post Burn Balance: %O" 
+    gFryConnection.totalSupplyQuery()
+    |> printfn "Post total Supply: %O" 
+
+    // let gFryCon = getGFryContract()
+    // let account = Account(hardhatPrivKey2)
+
+    // let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
+    // let data = gFryConnection.burnData("1")
+
+    // let receipt = debug.Forward(gFryConnection.Address,  data)
+    // let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
+    // forwardEvent |> shouldRevertWithMessage "Comp::_mint: That account cannot mint"
+    // should equal compareBigInt (gFryConnection.totalSupplyQuery())
+
+
+    // let redeemerConnection = EthereumConnection(hardhatURI, hardhatPrivKey2)
+
+    // let tokensToTransferBigInt = tokensToMint |> toE18
+    // let tokensToRedeemBigInt = tokensToRedeem |> toE18
+
+    // tokensToRedeemBigInt |> should lessThan tokensToTransferBigInt
+
+    // dEthContract.transfer(redeemerConnection.Account.Address,tokensToTransferBigInt) |> shouldSucceed
+
+    // let tokenBalanceBefore = balanceOf dEthContract redeemerConnection.Account.Address
+
+    // let gulperBalanceBefore = getGulperEthBalance ()
+
+    // if riskLevelShouldBeExceeded then
+    //     makeRiskLimitLessThanExcessCollateral dEthContract |> shouldSucceed
+
+    // let receiverAddress = makeAccount().Address
+    
+    // let (protocolFeeExpected, automationFeeExpected, collateralRedeemedExpected, collateralReturnedExpected) = 
+    //     queryStateAndCalculateRedemptionValue dEthContract tokensToRedeemBigInt
+
+    // let redeemerContract = Contracts.dEthContract(dEthContract.Address, redeemerConnection.GetWeb3)
+    // let redeemTx = redeemerContract.redeem(receiverAddress,tokensToRedeemBigInt)
+    // redeemTx |> shouldSucceed
+
+    // receiverAddress |> ethConn.GetEtherBalance |> should equal collateralReturnedExpected
+    // getGulperEthBalance () |> should equal (protocolFeeExpected + gulperBalanceBefore)
+
+    // balanceOf dEthContract redeemerConnection.Account.Address |> should equal (tokenBalanceBefore - tokensToRedeemBigInt)
+
+    // let event = redeemTx.DecodeAllEvents<Contracts.dEthContract.RedeemedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
+    // event._redeemer |> shouldEqualIgnoringCase redeemerConnection.Account.Address
+//     event._receiver |> shouldEqualIgnoringCase receiverAddress
+//     event._tokensRedeemed |> should equal tokensToRedeemBigInt
+//     event._protocolFee |> should equal protocolFeeExpected
+//     event._automationFee |> should equal automationFeeExpected
+//     event._collateralRedeemed |> should equal collateralRedeemedExpected
+//     event._collateralReturned |> should equal collateralReturnedExpected
+
+
+
+
+
+
 
 
     // let data = gFryCon.mint(zeroAddress, "A") |> shouldFail
