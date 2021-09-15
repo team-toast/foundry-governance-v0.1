@@ -1,6 +1,7 @@
 module GovernanceTests
 
 open System
+//open System.Exception
 open System.Numerics
 open Xunit
 open FsUnit.Xunit
@@ -40,11 +41,110 @@ let ``Non gFry deployer account can not mint`` () =
 
     let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
     let data = gFryCon.mintData(account.Address, "10")
+
     let receipt = debug.Forward(gFryCon.Address,  data)
     let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
     forwardEvent |> shouldRevertWithMessage "Comp::_mint: That account cannot mint"
     let zero = bigint 0;
     should equal zero (gFryCon.totalSupplyQuery())
+
+[<Specification("gFry", "mint", 1)>]
+[<Fact>]
+let ``Can mint amount 0`` () =
+    restore ()
+
+    let gFryCon = getGFryContract()
+    let account = Account(hardhatPrivKey)
+    let account2 = Account(hardhatPrivKey2)
+    // printfn "Address of Account: %O" account.Address
+
+    let data = gFryCon.mint(account2.Address, "0")
+    printfn "TX: %O" data.TransactionHash
+
+    let zero = bigint 0;
+    should equal zero (gFryCon.totalSupplyQuery())
+
+[<Specification("gFry", "mint", 1)>]
+[<Fact>]
+let ``Can mint positive amount`` () =
+    restore ()
+
+    let gFryCon = getGFryContract()
+    //let governator = getGovernatorContract(gFryCon.Address)
+    let account = Account(hardhatPrivKey)
+    let account2 = Account(hardhatPrivKey2)
+    // printfn "Address of Account: %O" account.Address
+
+    let data = gFryCon.mint(account2.Address, "A")
+    printfn "TX: %O" data.TransactionHash
+
+    let ten = bigint 10;
+    should equal ten (gFryCon.totalSupplyQuery())
+
+[<Specification("gFry", "mint", 1)>]
+[<Fact>]
+let ``Can't mint to the zero address`` () =
+    restore ()
+
+    let gFryCon = getGFryContract()
+
+    try
+        gFryCon.mint(zeroAddress, "A") |> ignore
+        failwith "Should not be able to mint to zero address"
+    with ex ->
+        printfn "%O" ex
+        ex.Message.ToLowerInvariant().Contains("cannot mint to the zero address") 
+        |> should equal true
+
+
+    // let data = gFryCon.mint(zeroAddress, "A") |> shouldFail
+    // //printfn "TX: %O" data.TransactionHash
+
+    // let zero = bigint 0;
+    // should equal zero (gFryCon.totalSupplyQuery())
+
+
+    //printfn "TX: %O" data.TransactionHash
+    // let trydivisionFunc x y =
+    //     try
+    //         gFryCon.mint("0x0000000000000000000000000000000000000000", "10")
+    //     with
+    //         | Failure()
+    //1
+    //( gFryCon.mint("0x0000000000000000000000000000000000000000", "10") -> This.Throws("a", 10) |> ignore)
+    //    |> should (throwWithMessage "Some message") typeof<ArgumentException> 
+
+    // try
+    //     gFryCon.mint("0x0000000000000000000000000000000000000000", "10")
+    // finally
+    //     1
+
+    // let receipt = debug.Forward(gFryCon.Address, data)
+    // let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
+    // let result = forwardEvent |> shouldSucceed
+
+    
+    // let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
+    // let data = gFryCon.mintData(account2.Address, "A")
+    // debug.Forward(gFryCon.Address, data)
+    //     |> debug.DecodeForwardedEvents
+    //     |> Seq.head
+    //     |> printfn "%O"
+
+    
+    //let receipt = debug.Forward(gFryCon.Address,  data)
+    //let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
+    //forwardEvent |> shouldRevertWithMessage "Comp::_mint: That account cannot mint"
+    // printf "RETURN DATA:"
+    // printfn "%O" data
+    // debug.Forward(dEthContract.Address, data)
+    //     |> debug.DecodeForwardedEvents
+    //     |> Seq.head
+    //     |> shouldRevertWithUnknownMessage
+    
+    // let zero = bigint 0;
+    // should equal zero (gFryCon.totalSupplyQuery())
+   
 
 // [<Specification("dEth", "changeGulper", 1)>]
 // [<Fact>]

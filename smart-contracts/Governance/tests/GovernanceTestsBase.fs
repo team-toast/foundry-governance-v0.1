@@ -12,6 +12,10 @@ let getGFryContract() =
     let contract = Contracts.gFRYContract(ethConn.GetWeb3)
     contract
 
+let getGovernatorContract(gFryAddress) =
+    let contract = Contracts.GovernatorContract(ethConn.GetWeb3, gFryAddress)
+    contract
+
 // note: this is used to be able to specify owner and contract addresses in inlinedata (we cannot use DUs in attributes)
 let mapInlineDataArgumentToAddress inlineDataArgument calledContractAddress =
     match inlineDataArgument with

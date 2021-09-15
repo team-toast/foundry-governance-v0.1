@@ -160,6 +160,7 @@ let hardhatPrivKey2 = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603
 let hardhatAccount = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 let rinkebyPrivKey = "5ca35a65adbd49af639a3686d7d438dba1bcef97cf1593cd5dd8fd79ca89fa3c"
 let blockNumber = 12330245UL
+let zeroAddress = "0x0000000000000000000000000000000000000000"
 
 let isRinkeby rinkeby notRinkeby =
     match useRinkeby with
