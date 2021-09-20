@@ -408,12 +408,20 @@ let ``Constructor initiates with correct values`` () =
     let connection = ethConn.GetWeb3
     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
     
-    printfn "Governator address: %O" governatorCon.Address
-    printfn "Fry address according to governator: %O" (governatorCon.FRYQuery())
-    printfn "FRY address: %O" fryCon.Address
-    printfn "gFry address according to governator: %O" (governatorCon.gFryQuery())
+    // printfn "Governator address: %O" governatorCon.Address
+    // printfn "Fry address according to governator: %O" (governatorCon.FRYQuery())
+    // printfn "FRY address: %O" fryCon.Address
+    // printfn "gFry address according to governator: %O" (governatorCon.gFryQuery())
 
+    let gFryAddress = governatorCon.gFryQuery()
+    let governatorFryAddress = governatorCon.FRYQuery()
+    let fryAddress = fryCon.Address
+    let addressLength = 42
 
+    governatorFryAddress 
+    |> should equal fryAddress
+    gFryAddress.Length
+    |> should equal addressLength
 
     
     // let gFryCon = Contracts.gFRYContract(ethConn.GetWeb3)
