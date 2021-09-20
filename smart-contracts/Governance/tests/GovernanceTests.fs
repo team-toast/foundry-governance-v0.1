@@ -38,14 +38,16 @@ let ``Non gFry deployer account can not mint`` () =
 
     let gFryCon = getGFryContract()
     let account = Account(hardhatPrivKey2)
+    let mintAmountHex = "A"
+    let zero = bigint 0;
 
     let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
-    let data = gFryCon.mintData(account.Address, "10")
+    let data = gFryCon.mintData(account.Address, mintAmountHex)
 
     let receipt = debug.Forward(gFryCon.Address,  data)
     let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
     forwardEvent |> shouldRevertWithMessage "Comp::_mint: That account cannot mint"
-    let zero = bigint 0;
+    
     should equal zero (gFryCon.totalSupplyQuery())
 
 [<Specification("gFry", "mint", 1)>]
@@ -54,9 +56,10 @@ let ``Can't mint to the zero address`` () =
     restore ()
 
     let gFryCon = getGFryContract()
+    let mintAmountHex = "A"
 
     try
-        gFryCon.mint(zeroAddress, "A") |> ignore
+        gFryCon.mint(zeroAddress, mintAmountHex) |> ignore
         failwith "Should not be able to mint to zero address"
     with ex ->
         //printfn "%O" ex
@@ -95,24 +98,22 @@ let ``Can mint positive amount`` () =
 
     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
     let zero = bigint 0;
-    let compareBigInt = bigint 16;
-    let toMint = 10.0
-    let amountToMint = toMint
-    let amountToMintStr = amountToMint.ToString()
-    let mintTx = gFryConnection.mint(hardhatAccount,  amountToMintStr)
+    let mintAmountBigInt = bigint 10;
+    let mintAmountHex = "A";
+    let mintTx = gFryConnection.mint(hardhatAccount,  mintAmountHex)
     mintTx |> shouldSucceed
     let gFryBalance = gFryConnection.balanceOfQuery(hardhatAccount)
 
     let event = mintTx.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
     event.from |> should equal zeroAddress
     event._to |> should equal hardhatAccount
-    event.amount |> should equal compareBigInt
-    gFryBalance |> should equal compareBigInt
+    event.amount |> should equal mintAmountBigInt
+    gFryBalance |> should equal mintAmountBigInt
 
     let event2 = mintTx.DecodeAllEvents<Contracts.CompContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
     event2._delegate |> should equal hardhatAccount
     event2._previousBalance |> should equal zero
-    event2._newBalance |> should equal compareBigInt
+    event2._newBalance |> should equal mintAmountBigInt
 
 [<Specification("gFry", "burn", 0)>]
 [<Fact>]
@@ -122,9 +123,10 @@ let ``Account with zero balance can't burn`` () =
     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
     let compareBigIntAccountAfterBurn = bigint 0;
     let compareBigIntTotalSupplyAfterBurn = bigint 0;
+    let amountToBurnHex = "A";
 
     try
-        gFryConnection.burn("10") |> ignore
+        gFryConnection.burn(amountToBurnHex) |> ignore
         failwith "Should not be able to burn with zero balance"
     with ex ->
         //printfn "%O" ex
@@ -141,15 +143,13 @@ let ``Account with non zero balance can't burn more tokens than they have`` () =
     restore ()
 
     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-    let compareBigIntAccountAfterBurn = bigint 256;
-    let compareBigIntTotalSupplyAfterBurn = bigint 512;
+    let compareBigIntAccountAfterBurn = bigint 100;
+    let compareBigIntTotalSupplyAfterBurn = bigint 200;
 
-    let toMint = 100.0
-    let amountToMint = toMint
-    let amountToMintStr = amountToMint.ToString()
-    let mintTx = gFryConnection.mint(hardhatAccount,  amountToMintStr)
+    let toMintHex = "64" // int 100
+    let mintTx = gFryConnection.mint(hardhatAccount,  toMintHex)
     mintTx |> shouldSucceed
-    let mintTx2 = gFryConnection.mint(hardhatAccount2,  amountToMintStr)
+    let mintTx2 = gFryConnection.mint(hardhatAccount2,  toMintHex)
     mintTx2|> shouldSucceed
 
     try
@@ -171,17 +171,16 @@ let ``Account with positive balance can burn`` () =
     restore ()
 
     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-    let compareBigIntAccountBeforeBurn = bigint 256;
-    let compareBigIntAccountAfterBurn = bigint 240;
-    let compareBigIntTotalSupplyAfterBurn = bigint 496;
-    let toMint = 100.0
-    let amountToMint = toMint
-    let amountToMintStr = amountToMint.ToString()
-    let burnAmount = bigint 16
+    let compareBigIntAccountBeforeBurn = bigint 100;
+    let compareBigIntAccountAfterBurn = bigint 90;
+    let compareBigIntTotalSupplyAfterBurn = bigint 190;
+    let toMintHex = "64" // int 100
+    let burnAmountHex = "A"
+    let burnAmount = bigint 10;
 
-    let mintTx = gFryConnection.mint(hardhatAccount,  amountToMintStr)
+    let mintTx = gFryConnection.mint(hardhatAccount,  toMintHex)
     mintTx |> shouldSucceed
-    let mintTx2 = gFryConnection.mint(hardhatAccount2,  amountToMintStr)
+    let mintTx2 = gFryConnection.mint(hardhatAccount2,  toMintHex)
     mintTx2|> shouldSucceed
     // gFryConnection.balanceOfQuery(hardhatAccount)
     // |> printfn "Mint Account 1 Balance: %O" 
@@ -190,7 +189,7 @@ let ``Account with positive balance can burn`` () =
     // gFryConnection.totalSupplyQuery()
     // |> printfn "Mint total Supply: %O" 
 
-    let burnTx = gFryConnection.burn("10")
+    let burnTx = gFryConnection.burn(burnAmountHex)
     burnTx |> shouldSucceed
     let balanceAfterBurn = gFryConnection.balanceOfQuery(hardhatAccount)
     // printfn "Post Burn Balance: %O" balanceAfterBurn
@@ -218,8 +217,11 @@ let ``Non deployer can't transfer without allowance`` () =
     
     let gFryCon = getGFryContract()
     let account = Account(hardhatPrivKey)
+    let toMintHex = "64" // int 100
+    let toMint = bigint 100;
 
-    let mintTx = gFryCon.mint(account.Address,  "50")
+
+    let mintTx = gFryCon.mint(account.Address,  toMintHex)
     mintTx |> shouldSucceed
 
     let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
@@ -229,7 +231,7 @@ let ``Non deployer can't transfer without allowance`` () =
     let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
     forwardEvent |> shouldRevertWithMessage "Comp::transferFrom: transfer amount exceeds spender allowance"
     let zero = bigint 0;
-    should equal (bigint 80) (gFryCon.balanceOfQuery(account.Address))
+    should equal toMint (gFryCon.balanceOfQuery(account.Address))
 
 [<Specification("gFry", "transferFrom", 1)>]
 [<Fact>]
@@ -237,13 +239,12 @@ let ``Cannot transfer to zero address`` () =
     restore ()
 
     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-    let compareBigIntAccountAfter = bigint 256;
-    let compareBigIntTotalSupplyAfter = bigint 256;
-    let toMint = 100.0
-    let amountToMint = toMint
-    let amountToMintStr = amountToMint.ToString()
+    let compareBigIntAccountAfter = bigint 100;
+    let compareBigIntTotalSupplyAfter = bigint 100;
+    let toMintHex = "64" // int 100
+    let toTransfer = bigint 10;
 
-    let mintTx = gFryConnection.mint(hardhatAccount,  amountToMintStr)
+    let mintTx = gFryConnection.mint(hardhatAccount,  toMintHex)
     mintTx |> shouldSucceed
 
     // gFryConnection.balanceOfQuery(hardhatAccount)
@@ -252,7 +253,7 @@ let ``Cannot transfer to zero address`` () =
     // |> printfn "Mint total Supply: %O" 
 
     try
-        gFryConnection.transferFrom(hardhatAccount, zeroAddress, bigint 10) |> ignore
+        gFryConnection.transferFrom(hardhatAccount, zeroAddress, toTransfer) |> ignore
         failwith "Should not be able to transfer to with zero address"
     with ex ->
         //printfn "%O" ex
@@ -270,15 +271,16 @@ let ``Cannot transfer more than uint96 max`` () =
     restore ()
 
     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-    let compareBigIntAccountAfter = bigint 256;
-    let compareBigIntTotalSupplyAfter = bigint 256;
-    let toMint = 10000000000000000000.0 |> toE18
+    let compareBigIntAccountAfter = bigint 100;
+    let compareBigIntTotalSupplyAfter = bigint 100;
+    let hugeNumber = 10000000000000000000.0 |> toE18
+    let toMintHex = "64" // int 100
 
-    let mintTx = gFryConnection.mint(hardhatAccount,  "100")
+    let mintTx = gFryConnection.mint(hardhatAccount,  toMintHex)
     mintTx |> shouldSucceed
 
     try
-        gFryConnection.transferFrom(hardhatAccount, hardhatAccount2, toMint) |> ignore
+        gFryConnection.transferFrom(hardhatAccount, hardhatAccount2, hugeNumber) |> ignore
         failwith "Should not be able to transfer more than uint96 max"
     with ex ->
         //printfn "%O" ex
@@ -295,17 +297,20 @@ let ``Cannot transfer more than uint96 max`` () =
 let ``Non deployer can transferFrom when approved`` () =
     restore ()
 
+    let toMintHex = "4E20"; // 20,000
+    let transferAmount = bigint 5000;
+    let remainingAmount = bigint 15000;
+
     let connection = ethConn.GetWeb3
     let gFryCon1 = Contracts.gFRYContract(connection)
-    let account = Account(hardhatPrivKey)
 
     let approveTxr =
-        Contracts.gFRYContract.approveFunction(rawAmount = bigint 10000, spender = hardhatAccount3)
+        Contracts.gFRYContract.approveFunction(rawAmount = transferAmount, spender = hardhatAccount3)
         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address) gFryCon1.Address
     
     // printfn "ALLOWANCE: %O" (gFryCon1.allowanceQuery(hardhatAccount2, hardhatAccount3))
 
-    let mintTx2 = gFryCon1.mint(hardhatAccount2,  "4e20") // 20,000
+    let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMintHex) // 20,000
     mintTx2 |> shouldSucceed
 
     let balanceBeforeTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
@@ -321,7 +326,7 @@ let ``Non deployer can transferFrom when approved`` () =
     // printfn "Delegates: %O" delegates
 
     let transferFromTxr =
-        Contracts.gFRYContract.transferFromFunction(src = hardhatAccount2, dst = hardhatAccount3, rawAmount = bigint 10000)
+        Contracts.gFRYContract.transferFromFunction(src = hardhatAccount2, dst = hardhatAccount3, rawAmount = transferAmount)
         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address) gFryCon1.Address
         
     let balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
@@ -330,80 +335,64 @@ let ``Non deployer can transferFrom when approved`` () =
     // printfn "TransferFrom after 3: %O" balanceAfterTransfer2
 
     balanceAfterTransfer 
-    |> should equal (bigint 10000)
+    |> should equal remainingAmount
     
     balanceAfterTransfer2
-    |> should equal (bigint 10000)
+    |> should equal transferAmount
     
     let event = approveTxr.DecodeAllEvents<Contracts.gFRYContract.ApprovalEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
     event.owner |> should equal hardhatAccount2
     event.spender |> should equal hardhatAccount3
-    event.amount |> should equal (bigint 10000)
+    event.amount |> should equal transferAmount
 
     let event = transferFromTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
     event.from |> should equal hardhatAccount2
     event._to |> should equal hardhatAccount3
-    event.amount |> should equal (bigint 10000)
+    event.amount |> should equal transferAmount
 
     let event = transferFromTxr.DecodeAllEvents<Contracts.CompContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
     event._delegate |> should equal hardhatAccount3
     event._previousBalance |> should equal balanceBeforeTransfer
-    event._newBalance |> should equal (bigint 10000)
+    event._newBalance |> should equal remainingAmount
     
 [<Specification("gFry", "transferFrom", 4)>]
 [<Fact>]
 let ``Deployer can transferFrom without approval`` () =
     restore ()
 
+    let toMintHex = "4E20"; // 20,000
+    let transferAmount = bigint 5000;
+    let remainingAmount = bigint 15000;
+
     let connection = ethConn.GetWeb3
     let gFryCon1 = Contracts.gFRYContract(connection)
-    let account = Account(hardhatPrivKey)
 
-    let approveTxr =
-        Contracts.gFRYContract.approveFunction(rawAmount = bigint 10000, spender = hardhatAccount3)
-        |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address) gFryCon1.Address
-    
-    printfn "ALLOWANCE: %O" (gFryCon1.allowanceQuery(hardhatAccount2, hardhatAccount3))
+    // printfn "ALLOWANCE: %O" (gFryCon1.allowanceQuery(hardhatAccount2, hardhatAccount3))
 
-    let mintTx2 = gFryCon1.mint(hardhatAccount2,  "4e20") // 20000
+    let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMintHex) // 20000
     mintTx2 |> shouldSucceed
 
     let balanceBeforeTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
-    printfn "TransferFrom before 2: %O" balanceBeforeTransfer
+    // printfn "TransferFrom before 2: %O" balanceBeforeTransfer
     let balanceBeforeTransfer2 = gFryCon1.balanceOfQuery(hardhatAccount3)
-    printfn "TransferFrom before 3: %O" balanceBeforeTransfer2
-
-    let delegateTxr =
-        Contracts.CompContract.delegateFunction(delegatee = hardhatAccount3)
-        |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address) gFryCon1.Address
-
-    let delegates = gFryCon1.delegatesQuery(hardhatAccount2)
-    printfn "Delegates: %O" delegates
+    // printfn "TransferFrom before 3: %O" balanceBeforeTransfer2
 
     let transferFromTxr =
-        Contracts.gFRYContract.transferFromFunction(src = hardhatAccount2, dst = hardhatAccount3, rawAmount = bigint 10000)
-        |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address) gFryCon1.Address
+        gFryCon1.transferFrom(src = hardhatAccount2, dst = hardhatAccount3, rawAmount = transferAmount)
+    transferFromTxr |> shouldSucceed
         
     let balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
-    printfn "TransferFrom after 2: %O" balanceAfterTransfer
+    balanceAfterTransfer |> should equal remainingAmount
     let balanceAfterTransfer2 = gFryCon1.balanceOfQuery(hardhatAccount3)
-    printfn "TransferFrom after 3: %O" balanceAfterTransfer2
-    
-
-    let event = approveTxr.DecodeAllEvents<Contracts.gFRYContract.ApprovalEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-    event.owner |> should equal hardhatAccount2
-    event.spender |> should equal hardhatAccount3
-    event.amount |> should equal (bigint 10000)
+    // printfn "TransferFrom after 3: %O" balanceAfterTransfer2
+    let balanceAfterTransfer2 = should equal transferAmount
 
     let event = transferFromTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
     event.from |> should equal hardhatAccount2
     event._to |> should equal hardhatAccount3
-    event.amount |> should equal (bigint 10000)
+    event.amount |> should equal transferAmount
 
-    let event = transferFromTxr.DecodeAllEvents<Contracts.CompContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-    event._delegate |> should equal hardhatAccount3
-    event._previousBalance |> should equal balanceBeforeTransfer
-    event._newBalance |> should equal (bigint 10000)
+    //printfn "Voting POWER: %s" (gFryCon1.getCurrentVotesQuery(hardhatAccount2))
 
 
 
