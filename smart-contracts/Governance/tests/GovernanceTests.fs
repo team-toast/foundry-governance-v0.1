@@ -385,7 +385,7 @@ let ``Deployer can transferFrom without approval`` () =
     balanceAfterTransfer |> should equal remainingAmount
     let balanceAfterTransfer2 = gFryCon1.balanceOfQuery(hardhatAccount3)
     // printfn "TransferFrom after 3: %O" balanceAfterTransfer2
-    let balanceAfterTransfer2 = should equal transferAmount
+    balanceAfterTransfer2 |> should equal transferAmount
 
     let event = transferFromTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
     event.from |> should equal hardhatAccount2
