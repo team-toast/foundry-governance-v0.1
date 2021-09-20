@@ -297,7 +297,7 @@ let ``Cannot transfer more than uint96 max`` () =
 let ``Non deployer can transferFrom when approved`` () =
     restore ()
 
-    let toMintHex = "4E20"; // 20,000
+    let toMintHex = "4E20"; // int 20,000
     let transferAmount = bigint 5000;
     let remainingAmount = bigint 15000;
 
@@ -360,7 +360,7 @@ let ``Non deployer can transferFrom when approved`` () =
 let ``Deployer can transferFrom without approval`` () =
     restore ()
 
-    let toMintHex = "4E20"; // 20,000
+    let toMintHex = "4E20"; // int 20,000
     let transferAmount = bigint 5000;
     let remainingAmount = bigint 15000;
 
@@ -395,9 +395,12 @@ let ``Deployer can transferFrom without approval`` () =
     //printfn "Voting POWER: %s" (gFryCon1.getCurrentVotesQuery(hardhatAccount2))
 
 
+[<Specification("Governator", "constructor", 0)>]
+[<Fact>]
+let ``Constructor initiates with correct values`` () =
+    restore ()
 
-
-
+    
 
 
 
