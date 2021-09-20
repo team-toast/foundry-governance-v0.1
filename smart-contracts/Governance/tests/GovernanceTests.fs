@@ -29,6 +29,8 @@ let ``initializes with correct initial supply`` () =
     let gFryCon = getGFryContract()
 
     let zero = bigint 0;
+
+    should equal hardhatAccount (gFryCon.governatorQuery())
     should equal zero (gFryCon.totalSupplyQuery())
 
 [<Specification("gFry", "mint", 0)>]
@@ -400,7 +402,16 @@ let ``Deployer can transferFrom without approval`` () =
 let ``Constructor initiates with correct values`` () =
     restore ()
 
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
     
+    let connection = ethConn.GetWeb3
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    
+    printfn "Governator address: %O" governatorCon.Address
+    printfn "Fry address according to governator: %O" (governatorCon.FRYQuery())
+    printfn "FRY address: %O" fryCon.Address
+    printfn "gFry address according to governator: %O" (governatorCon.gFryQuery())
 
 
 
