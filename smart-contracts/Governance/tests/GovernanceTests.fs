@@ -102,7 +102,6 @@ let ``Can mint positive amount`` () =
     let mintTx = gFryConnection.mint(hardhatAccount,  amountToMintStr)
     mintTx |> shouldSucceed
     let gFryBalance = gFryConnection.balanceOfQuery(hardhatAccount)
-    printfn "gFry Balance %O" mintTx
 
     let event = mintTx.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
     event.from |> should equal zeroAddress
@@ -304,35 +303,38 @@ let ``Non deployer can transferFrom when approved`` () =
         Contracts.gFRYContract.approveFunction(rawAmount = bigint 10000, spender = hardhatAccount3)
         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address) gFryCon1.Address
     
-    printfn "ALLOWANCE: %O" (gFryCon1.allowanceQuery(hardhatAccount2, hardhatAccount3))
+    // printfn "ALLOWANCE: %O" (gFryCon1.allowanceQuery(hardhatAccount2, hardhatAccount3))
 
-    // let mintTx = gFryCon1.mint(account.Address,  "4e20")
-    // mintTx |> shouldSucceed
-    let mintTx2 = gFryCon1.mint(hardhatAccount2,  "4e20")
+    let mintTx2 = gFryCon1.mint(hardhatAccount2,  "4e20") // 20,000
     mintTx2 |> shouldSucceed
 
     let balanceBeforeTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
-    printfn "TransferFrom before 2: %O" balanceBeforeTransfer
+    // printfn "TransferFrom before 2: %O" balanceBeforeTransfer
     let balanceBeforeTransfer2 = gFryCon1.balanceOfQuery(hardhatAccount3)
-    printfn "TransferFrom before 3: %O" balanceBeforeTransfer2
+    // printfn "TransferFrom before 3: %O" balanceBeforeTransfer2
 
     let delegateTxr =
-        Contracts.CompContract.delegateFunction(delegatee = hardhatAccount2)
-        |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address) gFryCon1.Address
+        Contracts.CompContract.delegateFunction(delegatee = hardhatAccount3)
+        |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address) gFryCon1.Address
 
-    let delegates = gFryCon1.delegatesQuery(hardhatAccount3)
-    printfn "Delegates: %O" delegates
+    // let delegates = gFryCon1.delegatesQuery(hardhatAccount3)
+    // printfn "Delegates: %O" delegates
 
     let transferFromTxr =
         Contracts.gFRYContract.transferFromFunction(src = hardhatAccount2, dst = hardhatAccount3, rawAmount = bigint 10000)
         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address) gFryCon1.Address
         
     let balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
-    printfn "TransferFrom after 2: %O" balanceAfterTransfer
+    // printfn "TransferFrom after 2: %O" balanceAfterTransfer
     let balanceAfterTransfer2 = gFryCon1.balanceOfQuery(hardhatAccount3)
-    printfn "TransferFrom after 3: %O" balanceAfterTransfer2
-    
+    // printfn "TransferFrom after 3: %O" balanceAfterTransfer2
 
+    balanceAfterTransfer 
+    |> should equal (bigint 10000)
+    
+    balanceAfterTransfer2
+    |> should equal (bigint 10000)
+    
     let event = approveTxr.DecodeAllEvents<Contracts.gFRYContract.ApprovalEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
     event.owner |> should equal hardhatAccount2
     event.spender |> should equal hardhatAccount3
@@ -344,19 +346,13 @@ let ``Non deployer can transferFrom when approved`` () =
     event.amount |> should equal (bigint 10000)
 
     let event = transferFromTxr.DecodeAllEvents<Contracts.CompContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-    event._delegate |> should equal hardhatAccount2
+    event._delegate |> should equal hardhatAccount3
     event._previousBalance |> should equal balanceBeforeTransfer
-    event._newBalance |> should equal (bigint 30000)
-
-    // let event = transferFromTxr.DecodeAllEvents<Contracts.CompContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(0)
-    // event._delegate |> should equal hardhatAccount2
-    // event._previousBalance |> should equal balanceBeforeTransfer
-    // event._newBalance |> should equal (bigint 30000)
-
+    event._newBalance |> should equal (bigint 10000)
     
-[<Specification("gFry", "transferFrom", 3)>]
+[<Specification("gFry", "transferFrom", 4)>]
 [<Fact>]
-let ``Non deployer can transferFrom when approved 2`` () =
+let ``Deployer can transferFrom without approval`` () =
     restore ()
 
     let connection = ethConn.GetWeb3
