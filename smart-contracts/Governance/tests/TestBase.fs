@@ -156,9 +156,10 @@ let hardhatURI = "http://localhost:8545"
 let rinkebyURI = "https://rinkeby.infura.io/v3/c48bc466281c4fefb3decad63c4fc815"
 let ganacheMnemonic = "join topple vapor pepper sell enter isolate pact syrup shoulder route token"
 let hardhatPrivKey = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-let hardhatPrivKey2 = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+let hardhatPrivKey2 = "59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
 let hardhatAccount = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 let hardhatAccount2 = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+let hardhatAccount3 = "0x90f79bf6eb2c4f870365e785982e1f101e93b906"
 let rinkebyPrivKey = "5ca35a65adbd49af639a3686d7d438dba1bcef97cf1593cd5dd8fd79ca89fa3c"
 let blockNumber = 12330245UL
 let zeroAddress = "0x0000000000000000000000000000000000000000"
@@ -170,6 +171,9 @@ let isRinkeby rinkeby notRinkeby =
 
 let ethConn =
     isRinkeby (EthereumConnection(rinkebyURI, rinkebyPrivKey)) (EthereumConnection(hardhatURI, hardhatPrivKey))
+
+let ethConnWithPrivKey2 =
+    isRinkeby (EthereumConnection(rinkebyURI, rinkebyPrivKey)) (EthereumConnection(hardhatURI, hardhatPrivKey2))
 
 let shouldEqualIgnoringCase (a: string) (b: string) =
     let aString = a |> string
