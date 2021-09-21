@@ -14,6 +14,7 @@ open Nethereum.RPC.Eth.DTOs
 open Nethereum.RPC.Infrastructure
 open Nethereum.Hex.HexTypes
 open Nethereum.JsonRpc.Client
+open Nethereum.Contracts.ContractHandlers
 open FsUnit.Xunit
 open Microsoft.FSharp.Control
 open Newtonsoft.Json
@@ -269,5 +270,48 @@ let shouldRevertWithMessage expectedMessage (forwardedEvent: Contracts.DebugCont
 let shouldRevertWithUnknownMessage (forwardedEvent: Contracts.DebugContract.ForwardedEventDTO) =
     shouldRevertWithMessage "" forwardedEvent
 
+// type IAsyncTxSender =
+//     abstract member SendTxAsync : string -> BigInteger -> string -> Task<TransactionReceipt>
+    
+// type Abi(filename) =
+//     member val JsonString = File.OpenText(filename).ReadToEnd()
+//     member this.AbiString = JsonConvert.DeserializeObject<JObject>(this.JsonString).GetValue("abi").ToString()
+//     member this.Bytecode = JsonConvert.DeserializeObject<JObject>(this.JsonString).GetValue("bytecode").ToString()
 
+// type ContractPlug(ethConn: EthereumConnection, abi: Abi, address) =
+//     member val public Address = address
 
+//     member val public Contract = 
+//         ethConn.Web3.Eth.GetContract(abi.AbiString, address)
+
+//     member this.Function functionName = 
+//         this.Contract.GetFunction(functionName)
+
+//     member this.QueryObjAsync<'a when 'a: (new: unit -> 'a)> functionName arguments = 
+//         (this.Function functionName).CallDeserializingToObjectAsync<'a> (arguments)
+
+//     member this.QueryObj<'a when 'a: (new: unit -> 'a)> functionName arguments = 
+//         this.QueryObjAsync<'a> functionName arguments |> runNow
+
+//     member this.QueryAsync<'a> functionName arguments = 
+//         (this.Function functionName).CallAsync<'a> (arguments)
+
+//     member this.Query<'a> functionName arguments = 
+//         this.QueryAsync<'a> functionName arguments |> runNow
+
+//     member this.FunctionData functionName arguments = 
+//         (this.Function functionName).GetData(arguments)
+
+//     member this.ExecuteFunctionFromAsyncWithValue value functionName arguments (connection:IAsyncTxSender) = 
+//         this.FunctionData functionName arguments |> connection.SendTxAsync this.Address value
+
+//     member this.ExecuteFunctionFromAsync = this.ExecuteFunctionFromAsyncWithValue (BigInteger(0))
+
+//     member this.ExecuteFunctionFrom functionName arguments connection = 
+//         this.ExecuteFunctionFromAsync functionName arguments connection |> runNow
+
+//     member this.ExecuteFunctionAsync functionName arguments = 
+//         this.ExecuteFunctionFromAsync functionName arguments (upcast ethConn)
+
+//     member this.ExecuteFunction functionName arguments = 
+//         this.ExecuteFunctionAsync functionName arguments |> runNow
