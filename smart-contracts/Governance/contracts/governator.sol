@@ -26,7 +26,7 @@ contract Governator
         public 
     {
         FRY.transferFrom(msg.sender, address(this), _amount);
-        gFry.mint(msg.sender, uint96(_amount));
+        gFry.mint(msg.sender, safe96(_amount, "Governator: uint96 overflows"));
     }
 
     // Redeem gFry in exchange for the share of FRY available
@@ -42,5 +42,10 @@ contract Governator
         gFry.transferFrom(msg.sender, address(this), uint96(_amount));
         gFry.burn(uint96(_amount));
         FRY.transfer(msg.sender, fryToReturn);
+    }
+
+    function safe96(uint n, string memory errorMessage) internal pure returns (uint96) {
+        require(n < 2**96, errorMessage);
+        return uint96(n);
     }
 }

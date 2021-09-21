@@ -404,8 +404,6 @@ let ``Constructor initiates with correct values`` () =
 
     let connection = ethConn.GetWeb3
     let fryCon = Contracts.FRYContract(connection)
-    
-    let connection = ethConn.GetWeb3
     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
     
     // printfn "Governator address: %O" governatorCon.Address
@@ -422,8 +420,65 @@ let ``Constructor initiates with correct values`` () =
     |> should equal fryAddress
     gFryAddress.Length
     |> should equal addressLength
+    
+
+[<Specification("Governator", "governate", 0)>]
+[<Fact>]
+let ``Governator can accept FRY in exchange for gFry`` () =
+    restore ()
+
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
+    let gFryCon = Contracts.gFRYContract(connection) // Wrong: Creating seperate gFry contract instance, I instead want a connection to the instance created by the governator
+    
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let amountOfFryToMint = bigint 1000
+    let gFryBuyAmount = bigint 400
+    
+    fryCon.mint(hardhatAccount, amountOfFryToMint)
+    |> shouldSucceed
+    fryCon.balanceOfQuery(hardhatAccount)
+    |> printfn "hardhat account FRY balance: %O"
+
+    printfn "Governator address: %O" governatorCon.Address
+    printfn "Fry address according to governator: %O" (governatorCon.FRYQuery())
+    printfn "FRY address: %O" fryCon.Address
+    printfn "gFry address according to governator: %O" (governatorCon.gFryQuery())
+
+    fryCon.approve(governatorCon.Address, gFryBuyAmount)
+    |> shouldSucceed
+    governatorCon.governate(gFryBuyAmount)
+    |> shouldSucceed
+
+    gFryCon.balanceOfQuery(hardhatAccount)
+    |> printfn "hardhatAccount account gFRY balance: %O" // This returns zero since it's not the correct instance of gFry
+    fryCon.balanceOfQuery(hardhatAccount)
+    |> printfn "hardhatAccount account FRY balance: %O"
+    fryCon.balanceOfQuery(governatorCon.Address)
+    |> printfn "governator account FRY balance: %O"
+
+
+    // Here I tried to use the debug contract to interact with the gFry instance that was deployed by the governator constructor
+    let debug = Debug(EthereumConnection(hardhatURI, hardhatPrivKey))
+    let data = gFryCon.balanceOfData(hardhatAccount)
+
+    let receipt = debug.Forward((governatorCon.gFryQuery()),  data)
+    let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
+    printfn "Return: %O" (System.Text.Encoding.ASCII.GetString(forwardEvent._resultData)) // This only returns a "?" character not the balanceOf value
 
     
+    // Is there an example in the deth tests that does something like this? I looked but didn't find an example.
+
+
+
+
+
+
+
+
+
+
+
     // let gFryCon = Contracts.gFRYContract(ethConn.GetWeb3)
     
     // let account = Account(hardhatPrivKey)
