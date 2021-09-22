@@ -425,7 +425,7 @@ let ``Constructor initiates with correct values`` () =
 
 [<Specification("Governator", "governate", 0)>]
 [<Fact>]
-let ``Governator can accept FRY in exchange for gFry`` () =
+let ``Can not mint gFry without giving governator allowance`` () =
     restore ()
 
     let connection = ethConn.GetWeb3
@@ -434,38 +434,102 @@ let ``Governator can accept FRY in exchange for gFry`` () =
     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
     let amountOfFryToMint = bigint 1000
     let gFryBuyAmount = bigint 400
-    
+    let zero = 0
+    let gFryAddress = (governatorCon.gFryQuery())
+
     fryCon.mint(hardhatAccount2, amountOfFryToMint)
     |> shouldSucceed
     fryCon.balanceOfQuery(hardhatAccount2)
-    |> printfn "hardhat account FRY balance: %O"
+    |> should equal amountOfFryToMint
 
-    printfn "Governator address: %O" governatorCon.Address
-    printfn "Fry address according to governator: %O" (governatorCon.FRYQuery())
-    printfn "FRY address: %O" fryCon.Address
-    printfn "gFry address according to governator: %O" (governatorCon.gFryQuery())
+    try
+        let governateTxr =
+            Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
+            |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
+        failwith "Should not be able to transfer more than uint96 max"
+    with ex ->
+        ex.Message.ToLowerInvariant().Contains("transfer amount exceeds allowance")
+        |> should equal true
+        let balanceAfterTransfer = fryCon.balanceOfQuery(hardhatAccount2)
+        balanceAfterTransfer |> should equal amountOfFryToMint
+        let gFryContract = ethConn.Web3.Eth.GetContract(ERC20_ABI, gFryAddress)
+        let balanceOfFunction = gFryContract.GetFunction("balanceOf")
+        let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+        gFryBalance |> should equal zero
+
+[<Specification("Governator", "governate", 0)>]
+[<Fact>]
+let ``Can not mint gFry without Fry`` () =
+    restore ()
+
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
+    
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let amountOfFryToMint = bigint 1000
+    let gFryBuyAmount = bigint 400
+    let zero = 0
     let gFryAddress = (governatorCon.gFryQuery())
 
-    let approveTxr =
-        Contracts.FRYContract.approveFunction(amount = gFryBuyAmount, spender = governatorCon.Address)
-        |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address) fryCon.Address
-
-    let approveTxr =
-        Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
-        |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
-
-    let balanceOfTxr =
-        Contracts.gFRYContract.balanceOfFunction(account = hardhatAccount2)
-        |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryAddress) gFryAddress
-
-    let contract = ethConn.Web3.Eth.GetContract(ERC20_ABI, gFryAddress)
-    let balanceOfFunction = contract.GetFunction("balanceOf")
-    let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
-    printfn "hardhatAccount account gFRY balance: %O" gFryBalance 
+    fryCon.mint(hardhatAccount2, amountOfFryToMint)
+    |> shouldSucceed
     fryCon.balanceOfQuery(hardhatAccount2)
-    |> printfn "hardhatAccount account FRY balance: %O"
-    fryCon.balanceOfQuery(governatorCon.Address)
-    |> printfn "governator account FRY balance: %O"
+    |> should equal amountOfFryToMint
+
+    try
+        let governateTxr =
+            Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
+            |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
+        failwith "Should not be able to transfer more than uint96 max"
+    with ex ->
+        ex.Message.ToLowerInvariant().Contains("transfer amount exceeds allowance")
+        |> should equal true
+        let balanceAfterTransfer = fryCon.balanceOfQuery(hardhatAccount2)
+        balanceAfterTransfer |> should equal amountOfFryToMint
+        let gFryContract = ethConn.Web3.Eth.GetContract(ERC20_ABI, gFryAddress)
+        let balanceOfFunction = gFryContract.GetFunction("balanceOf")
+        let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+        gFryBalance |> should equal zero
+    
+// [<Specification("Governator", "governate", 2)>]
+// [<Fact>]
+// let ``Governator can accept FRY in exchange for gFry`` () =
+//     restore ()
+
+//     let connection = ethConn.GetWeb3
+//     let fryCon = Contracts.FRYContract(connection)
+    
+//     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+//     let amountOfFryToMint = bigint 1000
+//     let gFryBuyAmount = bigint 400
+    
+//     fryCon.mint(hardhatAccount2, amountOfFryToMint)
+//     |> shouldSucceed
+//     fryCon.balanceOfQuery(hardhatAccount2)
+//     |> printfn "hardhat account FRY balance: %O"
+
+//     printfn "Governator address: %O" governatorCon.Address
+//     printfn "Fry address according to governator: %O" (governatorCon.FRYQuery())
+//     printfn "FRY address: %O" fryCon.Address
+//     printfn "gFry address according to governator: %O" (governatorCon.gFryQuery())
+//     let gFryAddress = (governatorCon.gFryQuery())
+
+//     let approveTxr =
+//         Contracts.FRYContract.approveFunction(amount = gFryBuyAmount, spender = governatorCon.Address)
+//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address) fryCon.Address
+
+//     let governateTxr =
+//         Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
+//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
+
+//     let contract = ethConn.Web3.Eth.GetContract(ERC20_ABI, gFryAddress)
+//     let balanceOfFunction = contract.GetFunction("balanceOf")
+//     let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+//     printfn "hardhatAccount account gFRY balance: %O" gFryBalance 
+//     fryCon.balanceOfQuery(hardhatAccount2)
+//     |> printfn "hardhatAccount account FRY balance: %O"
+//     fryCon.balanceOfQuery(governatorCon.Address)
+//     |> printfn "governator account FRY balance: %O"
 
 
 
