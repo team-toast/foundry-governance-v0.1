@@ -25,7 +25,7 @@ contract gFRY is Comp
         totalSupply = add96(uint96(totalSupply), amount, "Comp::_mint: totalSupply overflows");
         emit Transfer(address(0x0), to, amount);
 
-        _moveDelegates(address(0x0), to, amount);
+        //_moveDelegates(address(0x0), to, amount); // Review the removal of this line please
     }
 
     function burn(uint96 amount) 
@@ -35,9 +35,12 @@ contract gFRY is Comp
 
         balances[msg.sender] = sub96(balances[msg.sender], amount, "Comp::_burn: burn underflows");
         totalSupply = sub96(uint96(totalSupply), amount, "Comp::_burn: totalSupply burn underflows");
-        emit Transfer(msg.sender, address(0x0), amount);
+        emit Transfer(msg.sender, address(0), amount);
 
-        _moveDelegates(msg.sender, address(0x0), amount);
+        console.log("Debug 6");
+        console.log("delegates[msg.sender]: %s, delegates[address(0)]: %s", delegates[msg.sender], delegates[address(0)]);
+
+        _moveDelegates(delegates[msg.sender], delegates[address(0)], amount); // Review this was originally _moveDelegates(msg.sender, address(0), amount);
     }
 
     function transferFrom(address src, address dst, uint rawAmount) 
