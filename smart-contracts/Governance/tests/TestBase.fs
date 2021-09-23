@@ -48,6 +48,8 @@ type HardhatReset(client) =
 
 let rnd = Random()
 
+let bigint (x:int) = bigint(x)
+
 let rec rndRange min max  = 
     seq { 
         yield rnd.Next(min,max) |> BigInteger

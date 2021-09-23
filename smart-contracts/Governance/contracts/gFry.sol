@@ -25,7 +25,7 @@ contract gFRY is Comp
         totalSupply = add96(uint96(totalSupply), amount, "Comp::_mint: totalSupply overflows");
         emit Transfer(address(0x0), to, amount);
 
-        //_moveDelegates(address(0x0), to, amount); // Review the removal of this line please
+        _moveDelegates(delegates[address(0x0)], delegates[to], amount); // Review this was originally _moveDelegates(address(0x0), to, amount);
     }
 
     function burn(uint96 amount) 
