@@ -882,10 +882,10 @@ let ``Governator can accept gFry in exchange for Fry`` () =
     let gFryTotalSupplyAfter = totalSupplyFunction.CallAsync<int>() |> runNow
 
     // STATE
-    gFryBalanceAfterDegovernate |> should equal ((govFryBalance - amountOfgFryToDegovernate) |> int)
+    gFryBalanceAfterDegovernate |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
     fryCon.balanceOfQuery(hardhatAccount2)
     |> should equal (accFryBalance + amountOfgFryToDegovernate)
-    gFryTotalSupplyAfter |> should equal ((govFryBalance - amountOfgFryToDegovernate) |> int)
+    gFryTotalSupplyAfter |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
 
     // EVENTS
     let event = degovernateTxr.DecodeAllEvents<Contracts.FRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(0)
@@ -974,13 +974,13 @@ let ``Governator can accept gFry in exchange for Fry and delegatee voting power 
         Contracts.GovernatorContract.degovernateFunction(_amount = amountOfgFryToDegovernate)
         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
     
-    // STATUS
+    // STATE
     let gFryBalanceAfterDegovernate = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
-    gFryBalanceAfterDegovernate |> should equal ((govFryBalance - amountOfgFryToDegovernate) |> int)
+    gFryBalanceAfterDegovernate |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
     let currentVotesAccount3 = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
     currentVotesAccount3 |> should equal (currentVotesAccount3BeforeDegov - (amountOfgFryToDegovernate |> int))
     let gFryTotalSupplyAfter = totalSupplyFunction.CallAsync<int>() |> runNow
-    gFryTotalSupplyAfter |> should equal ((govFryBalance - amountOfgFryToDegovernate) |> int)
+    gFryTotalSupplyAfter |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
     fryCon.balanceOfQuery(hardhatAccount2)
     |> should equal (accFryBalance + amountOfgFryToDegovernate)
 
