@@ -34,33 +34,18 @@ contract Governator
     function degovernate(uint _amount)
         public
     {
-        console.log("Debug Info 1: ");
-        console.log("Amount to degovernate: ", _amount);
-        console.log("Total gFry supply: ", gFry.totalSupply());
 
         uint share = _amount.mul(10**18).div(gFry.totalSupply());
-
-        console.log("share: ", share);
 
         uint fryToReturn = FRY.balanceOf(address(this))
             .mul(share)
             .div(10**18);
 
-        console.log("fryToReturn: ", fryToReturn);
-        // this will be universal approval for this contract
-        console.log("Test 1: ");
-
         gFry.transferFrom(msg.sender, address(this), _amount);
-
-        console.log("Test 2: ");
 
         gFry.burn(safe96(_amount, "Governator: uint96 overflows"));
 
-        console.log("Test 3: ");
-
         FRY.transfer(msg.sender, fryToReturn);
-        
-        console.log("Test 4: ");
     }
 
     function safe96(uint n, string memory errorMessage) internal pure returns (uint96) {

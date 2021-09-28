@@ -239,10 +239,6 @@ contract Comp {
         balances[dst] = add96(balances[dst], amount, "Comp::_transferTokens: transfer amount overflows");
         emit Transfer(src, dst, amount);
 
-        console.log("Debug 4");
-        console.log("src: %s, dst: %s", src, dst);
-        console.log("delegates[src]: %s, delegates[dst]: %s", delegates[src], delegates[dst]);
-
         _moveDelegates(delegates[src], delegates[dst], amount);
     }
 
@@ -250,13 +246,8 @@ contract Comp {
         if (srcRep != dstRep && amount > 0) {
             
             if (srcRep != address(0)) {
-                console.log("Debug 5");
-                console.log("srcRep: %s, dstRep: %s", srcRep, dstRep);
                 uint32 srcRepNum = numCheckpoints[srcRep];
                 uint96 srcRepOld = srcRepNum > 0 ? checkpoints[srcRep][srcRepNum - 1].votes : 0;
-                console.log("Debug info 2");
-                console.log("srcRepOld * %i srcRepNum * %i", srcRepOld, srcRepNum);
-                console.log("Trying to sub %i from %i", amount, srcRepOld);
                 uint96 srcRepNew = sub96(srcRepOld, amount, "Comp::_moveVotes: vote amount underflows");
                 _writeCheckpoint(srcRep, srcRepNum, srcRepOld, srcRepNew);
             }
@@ -272,8 +263,7 @@ contract Comp {
 
     function _writeCheckpoint(address delegatee, uint32 nCheckpoints, uint96 oldVotes, uint96 newVotes) internal {
       uint32 blockNumber = safe32(block.number, "Comp::_writeCheckpoint: block number exceeds 32 bits");
-        console.log("Debug info 3");
-        console.log("Writing Checkpoint");
+
       if (nCheckpoints > 0 && checkpoints[delegatee][nCheckpoints - 1].fromBlock == blockNumber) {
           checkpoints[delegatee][nCheckpoints - 1].votes = newVotes;
       } else {

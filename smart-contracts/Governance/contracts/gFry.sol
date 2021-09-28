@@ -37,9 +37,6 @@ contract gFRY is Comp
         totalSupply = sub96(uint96(totalSupply), amount, "Comp::_burn: totalSupply burn underflows");
         emit Transfer(msg.sender, address(0), amount);
 
-        console.log("Debug 6");
-        console.log("delegates[msg.sender]: %s, delegates[address(0)]: %s", delegates[msg.sender], delegates[address(0)]);
-
         _moveDelegates(delegates[msg.sender], delegates[address(0)], amount); // Review this was originally _moveDelegates(msg.sender, address(0), amount);
     }
 
