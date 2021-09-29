@@ -374,7 +374,7 @@ let ``Non deployer can transferFrom when approved`` () =
     let balanceBeforeTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
 
     let transferFromTxr =
-        Contracts.gFRYContract.transferFromFunction(src = hardhatAccount2, dst = hardhatAccount3, rawAmount = transferAmount)
+        Contracts.gFRYContract.transferFromFunction(_src = hardhatAccount2, _dst = hardhatAccount3, _rawAmount = transferAmount)
         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address) gFryCon1.Address
         
     let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
@@ -431,7 +431,7 @@ let ``Non deployer can transferFrom when approved and voting power is updated ac
     let votesBeforeTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
 
     let transferFromTxr =
-        Contracts.gFRYContract.transferFromFunction(src = hardhatAccount2, dst = hardhatAccount3, rawAmount = transferAmount)
+        Contracts.gFRYContract.transferFromFunction(_src = hardhatAccount2, _dst = hardhatAccount3, _rawAmount = transferAmount)
         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address) gFryCon1.Address
 
     let votesAfterTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
@@ -494,7 +494,7 @@ let ``Deployer can transferFrom without approval and voting power is updated acc
 
     // Transfer with deployer address
     let transferFromTxr =
-        Contracts.gFRYContract.transferFromFunction(src = hardhatAccount2, dst = hardhatAccount3, rawAmount = transferAmount)
+        Contracts.gFRYContract.transferFromFunction(_src = hardhatAccount2, _dst = hardhatAccount3, _rawAmount = transferAmount)
         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount gFryAddress) gFryAddress
 
     let votesAfterTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
