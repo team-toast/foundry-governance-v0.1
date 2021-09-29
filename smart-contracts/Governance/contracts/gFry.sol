@@ -1,15 +1,16 @@
 pragma solidity ^0.5.0;
 
 import "./Comp.sol";
+import "hardhat/console.sol";
 
 contract gFRY is Comp 
 {
     address public governator;
-    uint public totalSupply;
+    uint public totalSupply  = 10000000e18;
 
     constructor() 
         public 
-        Comp(address(this))
+        Comp(msg.sender)
     {
         governator = msg.sender;
         burn(balances[msg.sender]); // TODO : update spec doc

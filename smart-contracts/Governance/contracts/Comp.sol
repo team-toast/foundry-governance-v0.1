@@ -1,5 +1,4 @@
 pragma solidity ^0.5.16;
-import "hardhat/console.sol";
 //pragma experimental ABIEncoderV2;
 
 contract Comp {

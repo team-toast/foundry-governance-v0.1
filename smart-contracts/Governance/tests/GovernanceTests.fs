@@ -27,6 +27,7 @@ let ``initializes with correct initial supply`` () =
     // STATE
     should equal hardhatAccount (gFryCon.governatorQuery())
     should equal zero (gFryCon.totalSupplyQuery())
+    should equal zero (gFryCon.balanceOfQuery(hardhatAccount))
 
 [<Specification("gFry", "mint", 0)>]
 [<Fact>]
@@ -72,7 +73,7 @@ let ``Can't mint to the zero address`` () =
     should equal zero (gFryCon.totalSupplyQuery())
     should equal zero (gFryCon.balanceOfQuery(zeroAddress))
 
-[<Specification("gFry", "mint", 2)>]
+[<Specification("gFry", "mint", 3)>]
 [<Fact>]
 let ``Deployer can mint positive amount`` () =
     restore ()
@@ -94,7 +95,7 @@ let ``Deployer can mint positive amount`` () =
     should equal mintAmountBigInt (gFryCon.balanceOfQuery(hardhatAccount))
     should equal mintAmountBigInt (gFryCon.totalSupplyQuery())
     
-[<Specification("gFry", "mint", 3)>]
+[<Specification("gFry", "mint", 4)>]
 [<Fact>]
 let ``Deployer can mint and voting power is updated accordingly`` () =
     restore ()
