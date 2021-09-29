@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/ubuntu/Desktop/work/GovernanceTokenGateway/smart-contracts/Governance/tests/Tests.fsproj": {}
+    "/Users/sjalq/git/foundry-governance-v0.1/smart-contracts/Governance/tests/Tests.fsproj": {}
   },
   "projects": {
-    "/home/ubuntu/Desktop/work/GovernanceTokenGateway/smart-contracts/Governance/tests/Tests.fsproj": {
+    "/Users/sjalq/git/foundry-governance-v0.1/smart-contracts/Governance/tests/Tests.fsproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/ubuntu/Desktop/work/GovernanceTokenGateway/smart-contracts/Governance/tests/Tests.fsproj",
+        "projectUniqueName": "/Users/sjalq/git/foundry-governance-v0.1/smart-contracts/Governance/tests/Tests.fsproj",
         "projectName": "Tests",
-        "projectPath": "/home/ubuntu/Desktop/work/GovernanceTokenGateway/smart-contracts/Governance/tests/Tests.fsproj",
-        "packagesPath": "/home/ubuntu/.nuget/packages/",
-        "outputPath": "/home/ubuntu/Desktop/work/GovernanceTokenGateway/smart-contracts/Governance/tests/obj/",
+        "projectPath": "/Users/sjalq/git/foundry-governance-v0.1/smart-contracts/Governance/tests/Tests.fsproj",
+        "packagesPath": "/Users/sjalq/.nuget/packages/",
+        "outputPath": "/Users/sjalq/git/foundry-governance-v0.1/smart-contracts/Governance/tests/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/ubuntu/.nuget/NuGet/NuGet.Config"
+          "/Users/sjalq/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "netcoreapp5.0"
@@ -39,7 +39,6 @@
               "generatePathProperty": true
             },
             "FSharp.Core": {
-              "include": "Runtime, Compile, Build, Native, Analyzers, BuildTransitive",
               "target": "Package",
               "version": "[5.0.0, )",
               "generatePathProperty": true
@@ -112,7 +111,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/5.0.400/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/5.0.103/RuntimeIdentifierGraph.json"
         }
       }
     }

@@ -4,13 +4,13 @@
     <RestoreSuccess Condition=" '$(RestoreSuccess)' == '' ">True</RestoreSuccess>
     <RestoreTool Condition=" '$(RestoreTool)' == '' ">NuGet</RestoreTool>
     <ProjectAssetsFile Condition=" '$(ProjectAssetsFile)' == '' ">$(MSBuildThisFileDirectory)project.assets.json</ProjectAssetsFile>
-    <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">/home/ubuntu/.nuget/packages/</NuGetPackageRoot>
-    <NuGetPackageFolders Condition=" '$(NuGetPackageFolders)' == '' ">/home/ubuntu/.nuget/packages/</NuGetPackageFolders>
+    <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">/Users/sjalq/.nuget/packages/</NuGetPackageRoot>
+    <NuGetPackageFolders Condition=" '$(NuGetPackageFolders)' == '' ">/Users/sjalq/.nuget/packages/</NuGetPackageFolders>
     <NuGetProjectStyle Condition=" '$(NuGetProjectStyle)' == '' ">PackageReference</NuGetProjectStyle>
-    <NuGetToolVersion Condition=" '$(NuGetToolVersion)' == '' ">5.11.0</NuGetToolVersion>
+    <NuGetToolVersion Condition=" '$(NuGetToolVersion)' == '' ">5.8.0</NuGetToolVersion>
   </PropertyGroup>
   <ItemGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
-    <SourceRoot Include="/home/ubuntu/.nuget/packages/" />
+    <SourceRoot Include="$([MSBuild]::EnsureTrailingSlash($(NuGetPackageFolders)))" />
   </ItemGroup>
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
@@ -24,19 +24,19 @@
     <Import Project="$(NuGetPackageRoot)microsoft.extensions.configuration.usersecrets/5.0.0/build/netstandard2.0/Microsoft.Extensions.Configuration.UserSecrets.props" Condition="Exists('$(NuGetPackageRoot)microsoft.extensions.configuration.usersecrets/5.0.0/build/netstandard2.0/Microsoft.Extensions.Configuration.UserSecrets.props')" />
   </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
-    <PkgNewtonsoft_Json Condition=" '$(PkgNewtonsoft_Json)' == '' ">/home/ubuntu/.nuget/packages/newtonsoft.json/10.0.3</PkgNewtonsoft_Json>
-    <PkgMicrosoft_NET_Test_Sdk Condition=" '$(PkgMicrosoft_NET_Test_Sdk)' == '' ">/home/ubuntu/.nuget/packages/microsoft.net.test.sdk/16.4.0</PkgMicrosoft_NET_Test_Sdk>
-    <Pkgxunit_runner_visualstudio Condition=" '$(Pkgxunit_runner_visualstudio)' == '' ">/home/ubuntu/.nuget/packages/xunit.runner.visualstudio/2.4.1</Pkgxunit_runner_visualstudio>
-    <Pkgxunit_analyzers Condition=" '$(Pkgxunit_analyzers)' == '' ">/home/ubuntu/.nuget/packages/xunit.analyzers/0.10.0</Pkgxunit_analyzers>
-    <Pkgxunit Condition=" '$(Pkgxunit)' == '' ">/home/ubuntu/.nuget/packages/xunit/2.4.1</Pkgxunit>
-    <PkgNethereum_Web3 Condition=" '$(PkgNethereum_Web3)' == '' ">/home/ubuntu/.nuget/packages/nethereum.web3/3.8.0</PkgNethereum_Web3>
-    <PkgMicrosoft_Extensions_Configuration Condition=" '$(PkgMicrosoft_Extensions_Configuration)' == '' ">/home/ubuntu/.nuget/packages/microsoft.extensions.configuration/5.0.0</PkgMicrosoft_Extensions_Configuration>
-    <PkgMicrosoft_Extensions_Configuration_UserSecrets Condition=" '$(PkgMicrosoft_Extensions_Configuration_UserSecrets)' == '' ">/home/ubuntu/.nuget/packages/microsoft.extensions.configuration.usersecrets/5.0.0</PkgMicrosoft_Extensions_Configuration_UserSecrets>
-    <PkgFSharp_Core Condition=" '$(PkgFSharp_Core)' == '' ">/home/ubuntu/.nuget/packages/fsharp.core/5.0.0</PkgFSharp_Core>
-    <PkgFsUnit_xUnit Condition=" '$(PkgFsUnit_xUnit)' == '' ">/home/ubuntu/.nuget/packages/fsunit.xunit/3.7.0</PkgFsUnit_xUnit>
-    <PkgFSharp_Data Condition=" '$(PkgFSharp_Data)' == '' ">/home/ubuntu/.nuget/packages/fsharp.data/3.3.3</PkgFSharp_Data>
-    <PkgFsCheck Condition=" '$(PkgFsCheck)' == '' ">/home/ubuntu/.nuget/packages/fscheck/2.15.1</PkgFsCheck>
-    <PkgFsCheck_Xunit Condition=" '$(PkgFsCheck_Xunit)' == '' ">/home/ubuntu/.nuget/packages/fscheck.xunit/2.15.1</PkgFsCheck_Xunit>
-    <PkgAbiTypeProvider Condition=" '$(PkgAbiTypeProvider)' == '' ">/home/ubuntu/.nuget/packages/abitypeprovider/0.0.4</PkgAbiTypeProvider>
+    <PkgNewtonsoft_Json Condition=" '$(PkgNewtonsoft_Json)' == '' ">/Users/sjalq/.nuget/packages/newtonsoft.json/10.0.3</PkgNewtonsoft_Json>
+    <PkgMicrosoft_NET_Test_Sdk Condition=" '$(PkgMicrosoft_NET_Test_Sdk)' == '' ">/Users/sjalq/.nuget/packages/microsoft.net.test.sdk/16.4.0</PkgMicrosoft_NET_Test_Sdk>
+    <Pkgxunit_runner_visualstudio Condition=" '$(Pkgxunit_runner_visualstudio)' == '' ">/Users/sjalq/.nuget/packages/xunit.runner.visualstudio/2.4.1</Pkgxunit_runner_visualstudio>
+    <Pkgxunit_analyzers Condition=" '$(Pkgxunit_analyzers)' == '' ">/Users/sjalq/.nuget/packages/xunit.analyzers/0.10.0</Pkgxunit_analyzers>
+    <Pkgxunit Condition=" '$(Pkgxunit)' == '' ">/Users/sjalq/.nuget/packages/xunit/2.4.1</Pkgxunit>
+    <PkgNethereum_Web3 Condition=" '$(PkgNethereum_Web3)' == '' ">/Users/sjalq/.nuget/packages/nethereum.web3/3.8.0</PkgNethereum_Web3>
+    <PkgMicrosoft_Extensions_Configuration Condition=" '$(PkgMicrosoft_Extensions_Configuration)' == '' ">/Users/sjalq/.nuget/packages/microsoft.extensions.configuration/5.0.0</PkgMicrosoft_Extensions_Configuration>
+    <PkgMicrosoft_Extensions_Configuration_UserSecrets Condition=" '$(PkgMicrosoft_Extensions_Configuration_UserSecrets)' == '' ">/Users/sjalq/.nuget/packages/microsoft.extensions.configuration.usersecrets/5.0.0</PkgMicrosoft_Extensions_Configuration_UserSecrets>
+    <PkgFSharp_Core Condition=" '$(PkgFSharp_Core)' == '' ">/Users/sjalq/.nuget/packages/fsharp.core/5.0.0</PkgFSharp_Core>
+    <PkgFsUnit_xUnit Condition=" '$(PkgFsUnit_xUnit)' == '' ">/Users/sjalq/.nuget/packages/fsunit.xunit/3.7.0</PkgFsUnit_xUnit>
+    <PkgFSharp_Data Condition=" '$(PkgFSharp_Data)' == '' ">/Users/sjalq/.nuget/packages/fsharp.data/3.3.3</PkgFSharp_Data>
+    <PkgFsCheck Condition=" '$(PkgFsCheck)' == '' ">/Users/sjalq/.nuget/packages/fscheck/2.15.1</PkgFsCheck>
+    <PkgFsCheck_Xunit Condition=" '$(PkgFsCheck_Xunit)' == '' ">/Users/sjalq/.nuget/packages/fscheck.xunit/2.15.1</PkgFsCheck_Xunit>
+    <PkgAbiTypeProvider Condition=" '$(PkgAbiTypeProvider)' == '' ">/Users/sjalq/.nuget/packages/abitypeprovider/0.0.4</PkgAbiTypeProvider>
   </PropertyGroup>
 </Project>
