@@ -37,6 +37,7 @@ contract gFRY is Comp
 
         balances[msg.sender] = sub96(balances[msg.sender], _amount, "Comp::_burn: burn underflows");
         totalSupply = sub96(uint96(totalSupply), _amount, "Comp::_burn: totalSupply underflows"); // TODO : update spec doc
+        
         emit Transfer(msg.sender, address(0), _amount);
 
         _moveDelegates(delegates[msg.sender], delegates[address(0)], _amount); // Review this was originally _moveDelegates(msg.sender, address(0), amount);

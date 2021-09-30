@@ -85,7 +85,7 @@ let ``Deployer can mint positive amount`` () =
     mintTx |> shouldSucceed
 
     // EVENTS
-    let event = mintTx.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents mintTx) |> Seq.head
     event.from |> should equal zeroAddress
     event._to |> should equal hardhatAccount
     event.amount |> should equal mintAmountBigInt
@@ -94,908 +94,892 @@ let ``Deployer can mint positive amount`` () =
     should equal mintAmountBigInt (gFryCon.balanceOfQuery(hardhatAccount))
     should equal mintAmountBigInt (gFryCon.totalSupplyQuery())
     
-// [<Specification("gFry", "mint", 4)>]
-// [<Fact>]
-// let ``Deployer can mint and voting power is updated accordingly`` () =
-//     restore ()
+[<Specification("gFry", "mint", 4)>]
+[<Fact>]
+let ``Deployer can mint and voting power is updated accordingly`` () =
+    restore ()
 
-//     let gFryCon = Contracts.gFRYContract(ethConn.GetWeb3)
-//     let toMintHex = "64" // int 100
-//     let toMint = bigint 100
-//     let zero = 0
+    let gFryCon = Contracts.gFRYContract(ethConn.GetWeb3)
+    let toMint = bigint 100
+    let zero = 0
 
-//     let delegateTx = gFryCon.delegateAsync(hardhatAccount) |> runNow
-//     delegateTx |> shouldSucceed
-//     let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryCon.Address)
-//     let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
-//     let votesBeforeMint = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
-//     let totalSupplyBeforeMint = gFryCon.totalSupplyQuery()
+    let delegateTx = gFryCon.delegateAsync(hardhatAccount) |> runNow
+    delegateTx |> shouldSucceed
+    let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryCon.Address)
+    let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
+    let votesBeforeMint = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
+    let totalSupplyBeforeMint = gFryCon.totalSupplyQuery()
     
-//     let mintTx = gFryCon.mint(hardhatAccount,  toMintHex)
-//     mintTx |> shouldSucceed
-//     let mintTx2 = gFryCon.mint(hardhatAccount2,  toMintHex)
-//     mintTx2|> shouldSucceed
+    let mintTx = gFryCon.mint(hardhatAccount,  toMint)
+    mintTx |> shouldSucceed
+    let mintTx2 = gFryCon.mint(hardhatAccount2,  toMint)
+    mintTx2|> shouldSucceed
     
-//     let votesAfterMint = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
-//     let totalSupplyAfterMint = gFryCon.totalSupplyQuery()
+    let votesAfterMint = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
+    let totalSupplyAfterMint = gFryCon.totalSupplyQuery()
 
-//     // STATE
-//     totalSupplyBeforeMint |> should equal (zero |> bigint)
-//     totalSupplyAfterMint |> should equal (toMint*(2 |> bigint))
-//     votesBeforeMint |> should equal (zero)
-//     votesAfterMint |> should equal ((toMint) |> int)
+    // STATE
+    totalSupplyBeforeMint |> should equal (zero |> bigint)
+    totalSupplyAfterMint |> should equal (toMint*(2 |> bigint))
+    votesBeforeMint |> should equal (zero)
+    votesAfterMint |> should equal ((toMint) |> int)
 
-//     // EVENTS
-//     let event = mintTx.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.from |> should equal zeroAddress
-//     event._to |> should equal hardhatAccount
-//     event.amount |> should equal toMint
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents mintTx) |> Seq.head
+    // EVENTS
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents mintTx) |> Seq.head
+    event.from |> should equal zeroAddress
+    event._to |> should equal hardhatAccount
+    event.amount |> should equal toMint
 
-//     let event = mintTx.DecodeAllEvents<Contracts.CompContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event._delegate |> should equal hardhatAccount
-//     event._previousBalance |> should equal (votesBeforeMint |> bigint)
-//     event._newBalance |> should equal (votesAfterMint |> bigint)
+    let event = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents mintTx) |> Seq.head
+    event._delegate |> should equal hardhatAccount
+    event._previousBalance |> should equal (votesBeforeMint |> bigint)
+    event._newBalance |> should equal (votesAfterMint |> bigint)
 
-// [<Specification("gFry", "burn", 0)>]
-// [<Fact>]
-// let ``Account with zero balance can't burn`` () =
-//     restore ()
+[<Specification("gFry", "burn", 0)>]
+[<Fact>]
+let ``Account with zero balance can't burn`` () =
+    restore ()
 
-//     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-//     let zero = bigint 0;
-//     let amountToBurnHex = "A";
+    let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
+    let zero = bigint 0;
+    let amountToBurn = bigint 10;
 
-//     try
-//         gFryConnection.burn(amountToBurnHex) |> ignore
-//         failwith "Should not be able to burn with zero balance"
-//     with ex ->
-//         // RETURNS
-//         ex.Message.ToLowerInvariant().Contains("burn underflows") 
-//         |> should equal true
+    try
+        gFryConnection.burn(amountToBurn) |> ignore
+        failwith "Should not be able to burn with zero balance"
+    with ex ->
+        // RETURNS
+        ex.Message.ToLowerInvariant().Contains("burn underflows") 
+        |> should equal true
         
-//         // STATE
-//         let balanceAfterBurn = gFryConnection.balanceOfQuery(hardhatAccount)
-//         balanceAfterBurn |> should equal zero
-//         let totalSupplyAfterBurn = gFryConnection.totalSupplyQuery()
-//         totalSupplyAfterBurn |> should equal zero
+        // STATE
+        let balanceAfterBurn = gFryConnection.balanceOfQuery(hardhatAccount)
+        balanceAfterBurn |> should equal zero
+        let totalSupplyAfterBurn = gFryConnection.totalSupplyQuery()
+        totalSupplyAfterBurn |> should equal zero
 
-// [<Specification("gFry", "burn", 1)>]
-// [<Fact>]
-// let ``Account with non zero balance can't burn more tokens than they have`` () =
-//     restore ()
+[<Specification("gFry", "burn", 1)>]
+[<Fact>]
+let ``Account with non zero balance can't burn more tokens than they have`` () =
+    restore ()
 
-//     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-//     let amountToBurn = "96" // 150
-//     let toMintHex = "64" // 100
-//     let toMintInt = bigint 100
+    let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
+    let amountToBurn = bigint 150
+    let toMint = bigint 100
 
-//     let mintTx = gFryConnection.mint(hardhatAccount,  toMintHex)
-//     mintTx |> shouldSucceed
-//     let mintTx2 = gFryConnection.mint(hardhatAccount2,  toMintHex)
-//     mintTx2|> shouldSucceed
+    let mintTx = gFryConnection.mint(hardhatAccount,  toMint)
+    mintTx |> shouldSucceed
+    let mintTx2 = gFryConnection.mint(hardhatAccount2,  toMint)
+    mintTx2|> shouldSucceed
 
-//     try
-//         gFryConnection.burn(amountToBurn) |> ignore
-//         failwith "Should not be able to burn more tokens than they have"
-//     with ex ->
-//         // RETURNS
-//         ex.Message.ToLowerInvariant().Contains("burn underflows")
-//         |> should equal true
+    try
+        gFryConnection.burn(amountToBurn) |> ignore
+        failwith "Should not be able to burn more tokens than they have"
+    with ex ->
+        // RETURNS
+        ex.Message.ToLowerInvariant().Contains("burn underflows")
+        |> should equal true
         
-//         // STATE
-//         let balanceAfterBurn = gFryConnection.balanceOfQuery(hardhatAccount)
-//         balanceAfterBurn |> should equal toMintInt
-//         let totalSupplyAfterBurn = gFryConnection.totalSupplyQuery()
-//         totalSupplyAfterBurn |> should equal (toMintInt*(2 |> bigint))
+        // STATE
+        let balanceAfterBurn = gFryConnection.balanceOfQuery(hardhatAccount)
+        balanceAfterBurn |> should equal toMint
+        let totalSupplyAfterBurn = gFryConnection.totalSupplyQuery()
+        totalSupplyAfterBurn |> should equal (toMint*(2 |> bigint))
 
-// [<Specification("gFry", "burn", 2)>]
-// [<Fact>]
-// let ``Account with positive balance can burn`` () =
-//     restore ()
+[<Specification("gFry", "burn", 2)>]
+[<Fact>]
+let ``Account with positive balance can burn`` () =
+    restore ()
 
-//     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-//     let toMintHex = "64" // int 100
-//     let toMint = bigint 100
-//     let burnAmountHex = "A"
-//     let burnAmount = bigint 10;
+    let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
+    let toMint = bigint 100
+    let burnAmount = bigint 10;
 
-//     let mintTx = gFryConnection.mint(hardhatAccount,  toMintHex)
-//     mintTx |> shouldSucceed
-//     let mintTx2 = gFryConnection.mint(hardhatAccount2,  toMintHex)
-//     mintTx2|> shouldSucceed
+    let mintTx = gFryConnection.mint(hardhatAccount,  toMint)
+    mintTx |> shouldSucceed
+    let mintTx2 = gFryConnection.mint(hardhatAccount2,  toMint)
+    mintTx2|> shouldSucceed
 
-//     let totalSupplyBeforeBurn = gFryConnection.totalSupplyQuery()
+    let totalSupplyBeforeBurn = gFryConnection.totalSupplyQuery()
 
-//     let burnTx = gFryConnection.burn(burnAmountHex)
-//     burnTx |> shouldSucceed
-//     let balanceAfterBurn = gFryConnection.balanceOfQuery(hardhatAccount)
-//     let totalSupplyAfterBurn = gFryConnection.totalSupplyQuery()
+    let burnTx = gFryConnection.burn(burnAmount)
+    burnTx |> shouldSucceed
+    let balanceAfterBurn = gFryConnection.balanceOfQuery(hardhatAccount)
+    let totalSupplyAfterBurn = gFryConnection.totalSupplyQuery()
 
-//     // STATE
-//     balanceAfterBurn |> should equal (toMint - burnAmount)
-//     totalSupplyAfterBurn |> should equal (totalSupplyBeforeBurn - burnAmount)
+    // STATE
+    balanceAfterBurn |> should equal (toMint - burnAmount)
+    totalSupplyAfterBurn |> should equal (totalSupplyBeforeBurn - burnAmount)
 
-//     // EVENTS
-//     let event = burnTx.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.from |> should equal hardhatAccount
-//     event._to |> should equal zeroAddress
-//     event.amount |> should equal burnAmount
+    // EVENTS
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents burnTx) |> Seq.head
+    event.from |> should equal hardhatAccount
+    event._to |> should equal zeroAddress
+    event.amount |> should equal burnAmount
 
 
-// [<Specification("gFry", "burn", 3)>]
-// [<Fact>]
-// let ``Account with positive balance can burn and voting power is updated accordingly`` () =
-//     restore ()
+[<Specification("gFry", "burn", 3)>]
+[<Fact>]
+let ``Account with positive balance can burn and voting power is updated accordingly`` () =
+    restore ()
 
-//     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-//     let toMintHex = "2710" // int 10,000
-//     let toMint = bigint 10000
-//     let burnAmountHex = "1388" // int 5000
-//     let burnAmount = bigint 5000;
+    let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
+    let toMint = bigint 10000
+    let burnAmount = bigint 5000;
 
-//     let mintTx = gFryConnection.mint(hardhatAccount,  toMintHex)
-//     mintTx |> shouldSucceed
-//     let mintTx2 = gFryConnection.mint(hardhatAccount2,  toMintHex)
-//     mintTx2|> shouldSucceed
-//     let delegateTx = gFryConnection.delegateAsync(hardhatAccount) |> runNow
-//     delegateTx |> shouldSucceed
-//     let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryConnection.Address)
-//     let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
-//     let votesBeforeBurn = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
+    let mintTx = gFryConnection.mint(hardhatAccount,  toMint)
+    mintTx |> shouldSucceed
+    let mintTx2 = gFryConnection.mint(hardhatAccount2,  toMint)
+    mintTx2|> shouldSucceed
+    let delegateTx = gFryConnection.delegateAsync(hardhatAccount) |> runNow
+    delegateTx |> shouldSucceed
+    let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryConnection.Address)
+    let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
+    let votesBeforeBurn = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
 
-//     let totalSupplyBeforeBurn = gFryConnection.totalSupplyQuery()
+    let totalSupplyBeforeBurn = gFryConnection.totalSupplyQuery()
 
-//     let burnTx = gFryConnection.burn(burnAmountHex)
-//     burnTx |> shouldSucceed
-//     let balanceAfterBurn = gFryConnection.balanceOfQuery(hardhatAccount)
-//     let votesAfterBurn = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
-//     let totalSupplyAfterBurn = gFryConnection.totalSupplyQuery()
+    let burnTx = gFryConnection.burn(burnAmount)
+    burnTx |> shouldSucceed
+    let balanceAfterBurn = gFryConnection.balanceOfQuery(hardhatAccount)
+    let votesAfterBurn = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
+    let totalSupplyAfterBurn = gFryConnection.totalSupplyQuery()
 
-//     // STATE
-//     balanceAfterBurn |> should equal (toMint - burnAmount)
-//     totalSupplyAfterBurn |> should equal (totalSupplyBeforeBurn - burnAmount)
-//     votesBeforeBurn |> should equal (toMint |> int)
-//     votesAfterBurn |> should equal ((toMint - burnAmount) |> int)
+    // STATE
+    balanceAfterBurn |> should equal (toMint - burnAmount)
+    totalSupplyAfterBurn |> should equal (totalSupplyBeforeBurn - burnAmount)
+    votesBeforeBurn |> should equal (toMint |> int)
+    votesAfterBurn |> should equal ((toMint - burnAmount) |> int)
 
-//     // EVENTS
-//     let event = burnTx.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.from |> should equal hardhatAccount
-//     event._to |> should equal zeroAddress
-//     event.amount |> should equal burnAmount
+    // EVENTS
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents burnTx) |> Seq.head
+    event.from |> should equal hardhatAccount
+    event._to |> should equal zeroAddress
+    event.amount |> should equal burnAmount
 
-//     let event = burnTx.DecodeAllEvents<Contracts.CompContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event._delegate |> should equal hardhatAccount
-//     event._previousBalance |> should equal (votesBeforeBurn |> bigint)
-//     event._newBalance |> should equal (votesAfterBurn |> bigint)
+    let event = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents burnTx) |> Seq.head
+    event._delegate |> should equal hardhatAccount
+    event._previousBalance |> should equal (votesBeforeBurn |> bigint)
+    event._newBalance |> should equal (votesAfterBurn |> bigint)
     
-// [<Specification("gFry", "transferFrom", 0)>]
-// [<Fact>]
-// let ``Non deployer can't transfer without allowance`` () =
-//     restore () 
+[<Specification("gFry", "transferFrom", 0)>]
+[<Fact>]
+let ``Non deployer can't transfer without allowance`` () =
+    restore () 
     
-//     let gFryCon = getGFryContract()
-//     let account = Account(hardhatPrivKey)
-//     let toMintHex = "64" // int 100
-//     let toMint = bigint 100
-//     let zero = bigint 0  
+    let gFryCon = getGFryContract()
+    let account = Account(hardhatPrivKey)
+    let toMint = bigint 100
+    let zero = bigint 0  
 
-//     let mintTx = gFryCon.mint(account.Address,  toMintHex)
-//     mintTx |> shouldSucceed
+    let mintTx = gFryCon.mint(account.Address,  toMint)
+    mintTx |> shouldSucceed
 
-//     let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
-//     let data = gFryCon.transferFromData(account.Address, hardhatAccount2, bigint 10)
-//     let receipt = debug.Forward(gFryCon.Address,  data)
+    let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
+    let data = gFryCon.transferFromData(account.Address, hardhatAccount2, bigint 10)
+    let receipt = debug.Forward(gFryCon.Address,  data)
 
-//     // RETURNS
-//     let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
-//     forwardEvent |> shouldRevertWithMessage "Comp::transferFrom: transfer amount exceeds spender allowance"
+    // RETURNS
+    let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
+    forwardEvent |> shouldRevertWithMessage "Comp::transferFrom: transfer amount exceeds spender allowance"
 
-//     // STATE
-//     should equal toMint (gFryCon.balanceOfQuery(account.Address))
-//     should equal zero (gFryCon.balanceOfQuery(hardhatAccount2))
+    // STATE
+    should equal toMint (gFryCon.balanceOfQuery(account.Address))
+    should equal zero (gFryCon.balanceOfQuery(hardhatAccount2))
 
-// [<Specification("gFry", "transferFrom", 1)>]
-// [<Fact>]
-// let ``Cannot transfer to zero address`` () =
-//     restore ()
+[<Specification("gFry", "transferFrom", 1)>]
+[<Fact>]
+let ``Cannot transfer to zero address`` () =
+    restore ()
 
-//     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-//     let toMintHex = "64" // int 100
-//     let toMint = bigint 100
-//     let toTransfer = bigint 10
-//     let zero = bigint 0
+    let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
+    let toMint = bigint 100
+    let toTransfer = bigint 10
+    let zero = bigint 0
 
-//     let mintTx = gFryConnection.mint(hardhatAccount,  toMintHex)
-//     mintTx |> shouldSucceed
+    let mintTx = gFryConnection.mint(hardhatAccount,  toMint)
+    mintTx |> shouldSucceed
 
-//     try
-//         gFryConnection.transferFrom(hardhatAccount, zeroAddress, toTransfer) |> ignore
-//         failwith "Should not be able to transfer to with zero address"
-//     with ex ->
-//         // RETURNS
-//         ex.Message.ToLowerInvariant().Contains("cannot transfer to the zero address")
-//         |> should equal true
+    try
+        gFryConnection.transferFrom(hardhatAccount, zeroAddress, toTransfer) |> ignore
+        failwith "Should not be able to transfer to with zero address"
+    with ex ->
+        // RETURNS
+        ex.Message.ToLowerInvariant().Contains("cannot transfer to the zero address")
+        |> should equal true
         
-//     // STATE
-//     let balanceAfterTransfer = gFryConnection.balanceOfQuery(hardhatAccount)
-//     balanceAfterTransfer |> should equal toMint
-//     let zeroAddressBalanceAfterTransfer = gFryConnection.balanceOfQuery(zeroAddress)
-//     zeroAddressBalanceAfterTransfer |> should equal zero
-//     let totalSupplyAfter = gFryConnection.totalSupplyQuery()
-//     totalSupplyAfter |> should equal toMint
+    // STATE
+    let balanceAfterTransfer = gFryConnection.balanceOfQuery(hardhatAccount)
+    balanceAfterTransfer |> should equal toMint
+    let zeroAddressBalanceAfterTransfer = gFryConnection.balanceOfQuery(zeroAddress)
+    zeroAddressBalanceAfterTransfer |> should equal zero
+    let totalSupplyAfter = gFryConnection.totalSupplyQuery()
+    totalSupplyAfter |> should equal toMint
 
-// [<Specification("gFry", "transferFrom", 2)>]
-// [<Fact>]
-// let ``Cannot transfer more than uint96 max`` () =
-//     restore ()
+[<Specification("gFry", "transferFrom", 2)>]
+[<Fact>]
+let ``Cannot transfer more than uint96 max`` () =
+    restore ()
 
-//     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-//     let hugeNumber = 10000000000000000000.0 |> toE18
-//     let toMintHex = "64" // int 100
-//     let toMint = bigint 100;
+    let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
+    let hugeNumber = 10000000000000000000.0 |> toE18
+    let toMint = bigint 100;
 
-//     let mintTx = gFryConnection.mint(hardhatAccount,  toMintHex)
-//     mintTx |> shouldSucceed
+    let mintTx = gFryConnection.mint(hardhatAccount,  toMint)
+    mintTx |> shouldSucceed
 
-//     try
-//         gFryConnection.transferFrom(hardhatAccount, hardhatAccount2, hugeNumber) |> ignore
-//         failwith "Should not be able to transfer more than uint96 max"
-//     with ex ->
-//         // RETURNS
-//         ex.Message.ToLowerInvariant().Contains("amount exceeds 96 bits")
-//         |> should equal true
+    try
+        gFryConnection.transferFrom(hardhatAccount, hardhatAccount2, hugeNumber) |> ignore
+        failwith "Should not be able to transfer more than uint96 max"
+    with ex ->
+        // RETURNS
+        ex.Message.ToLowerInvariant().Contains("amount exceeds 96 bits")
+        |> should equal true
     
-//     // STATE
-//     let balanceAfterTransfer = gFryConnection.balanceOfQuery(hardhatAccount)
-//     balanceAfterTransfer |> should equal toMint
-//     let totalSupplyAfter = gFryConnection.totalSupplyQuery()
-//     totalSupplyAfter |> should equal toMint
+    // STATE
+    let balanceAfterTransfer = gFryConnection.balanceOfQuery(hardhatAccount)
+    balanceAfterTransfer |> should equal toMint
+    let totalSupplyAfter = gFryConnection.totalSupplyQuery()
+    totalSupplyAfter |> should equal toMint
 
-// [<Specification("gFry", "transferFrom", 3)>]
-// [<Fact>]
-// let ``Non deployer can transferFrom when approved`` () =
-//     restore ()
+[<Specification("gFry", "transferFrom", 3)>]
+[<Fact>]
+let ``Non deployer can transferFrom when approved`` () =
+    restore ()
 
-//     let toMintHex = "4E20"; // int 20,000
-//     let toMintInt = bigint 20000
-//     let transferAmount = bigint 5000;
+    let toMint = bigint 20000
+    let transferAmount = bigint 5000;
 
-//     let connection = ethConn.GetWeb3
-//     let gFryCon1 = Contracts.gFRYContract(connection)
+    let connection = ethConn.GetWeb3
+    let gFryCon1 = Contracts.gFRYContract(connection)
 
-//     let approveTxr =
-//         Contracts.gFRYContract.approveFunction(rawAmount = transferAmount, spender = hardhatAccount3)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address) gFryCon1.Address
+    let approveInput = gFryCon1.approveTransactionInput(string hardhatAccount3, bigint (transferAmount |> int))
+    approveInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address
+    approveInput.To <- gFryCon1.Address
+    let approveTxr = ethConn.MakeImpersonatedCallWithNoEther approveInput
 
-//     let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMintHex) // 20,000
-//     mintTx2 |> shouldSucceed
+    let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMint)
+    mintTx2 |> shouldSucceed
 
-//     let balanceBeforeTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-//     let balanceBeforeTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
-
-//     let transferFromTxr =
-//         Contracts.gFRYContract.transferFromFunction(_src = hardhatAccount2, _dst = hardhatAccount3, _rawAmount = transferAmount)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address) gFryCon1.Address
+    let balanceBeforeTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let balanceBeforeTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    
+    let transferInput = gFryCon1.transferFromTransactionInput(string hardhatAccount2, string hardhatAccount3, bigint (transferAmount |> int))
+    transferInput.From <- mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address
+    transferInput.To <- gFryCon1.Address
+    let transferFromTxr = ethConn.MakeImpersonatedCallWithNoEther transferInput
         
-//     let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-//     let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
 
-
-//     // STATE
-//     balanceAfterTransferAccount2
-//     |> should equal (toMintInt - transferAmount)
+    // STATE
+    balanceAfterTransferAccount2
+    |> should equal (toMint - transferAmount)
     
-//     balanceAfterTransferAccount3
-//     |> should equal transferAmount
+    balanceAfterTransferAccount3
+    |> should equal transferAmount
     
-//     // EVENTS
-//     let event = approveTxr.DecodeAllEvents<Contracts.gFRYContract.ApprovalEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.owner |> should equal hardhatAccount2
-//     event.spender |> should equal hardhatAccount3
-//     event.amount |> should equal transferAmount
+    // EVENTS
+    let event = (Contracts.gFRYContract.ApprovalEventDTO.DecodeAllEvents approveTxr) |> Seq.head
+    event.owner |> should equal hardhatAccount2
+    event.spender |> should equal hardhatAccount3
+    event.amount |> should equal transferAmount
 
-//     let event = transferFromTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.from |> should equal hardhatAccount2
-//     event._to |> should equal hardhatAccount3
-//     event.amount |> should equal transferAmount
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents transferFromTxr) |> Seq.head
+    event.from |> should equal hardhatAccount2
+    event._to |> should equal hardhatAccount3
+    event.amount |> should equal transferAmount
 
-// [<Specification("gFry", "transferFrom", 4)>]
-// [<Fact>]
-// let ``Non deployer can transferFrom when approved and voting power is updated accordingly`` () =
-//     restore ()
+[<Specification("gFry", "transferFrom", 4)>]
+[<Fact>]
+let ``Non deployer can transferFrom when approved and voting power is updated accordingly`` () =
+    restore ()
 
-//     let toMintHex = "4E20"; // int 20,000
-//     let toMintInt = bigint 20000
-//     let transferAmount = bigint 5000;
+    let toMint = bigint 20000
+    let transferAmount = bigint 5000;
     
-//     let connection = ethConn.GetWeb3
-//     let gFryCon1 = Contracts.gFRYContract(connection)
-//     let gFryAddress = gFryCon1.Address
-//     let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
+    let connection = ethConn.GetWeb3
+    let gFryCon1 = Contracts.gFRYContract(connection)
+    let gFryAddress = gFryCon1.Address
+    let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
 
-//     let approveTxr =
-//         Contracts.gFRYContract.approveFunction(rawAmount = transferAmount, spender = hardhatAccount3)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address) gFryCon1.Address
+    let approveInput = gFryCon1.approveTransactionInput(string hardhatAccount3, bigint (transferAmount |> int))
+    approveInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address
+    approveInput.To <- gFryCon1.Address
+    let approveTxr = ethConn.MakeImpersonatedCallWithNoEther approveInput
 
-//     let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMintHex) // 20,000
-//     mintTx2 |> shouldSucceed
+    let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMint) // 20,000
+    mintTx2 |> shouldSucceed
 
-//     let balanceBeforeTransferAccout2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-//     let balanceBeforeTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let balanceBeforeTransferAccout2 = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let balanceBeforeTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
 
-//     let delegateTxr =
-//         Contracts.CompContract.delegateFunction(delegatee = hardhatAccount3)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address) gFryCon1.Address
+    let delegateInput = gFryCon1.delegateTransactionInput(string hardhatAccount3)
+    delegateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address
+    delegateInput.To <- gFryCon1.Address
+    let delegateTxr = ethConn.MakeImpersonatedCallWithNoEther delegateInput
 
-//     let votesBeforeTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let votesBeforeTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
 
-//     let transferFromTxr =
-//         Contracts.gFRYContract.transferFromFunction(_src = hardhatAccount2, _dst = hardhatAccount3, _rawAmount = transferAmount)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address) gFryCon1.Address
+    let transferInput = gFryCon1.transferFromTransactionInput(string hardhatAccount2, string hardhatAccount3, bigint (transferAmount |> int))
+    transferInput.From <- mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address
+    transferInput.To <- gFryCon1.Address
+    let transferFromTxr = ethConn.MakeImpersonatedCallWithNoEther transferInput
 
-//     let votesAfterTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+
+    let votesAfterTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
         
-//     let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-//     let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
 
-//     // STATE
-//     balanceAfterTransferAccount2 
-//     |> should equal (toMintInt - transferAmount)
-//     balanceAfterTransferAccount3
-//     |> should equal (balanceBeforeTransferAccount3 + transferAmount)
-//     votesBeforeTransfer
-//     |> should equal (toMintInt |> int)
-//     votesAfterTransfer
-//     |> should equal ((toMintInt - transferAmount) |> int)
+    // STATE
+    balanceAfterTransferAccount2 
+    |> should equal (toMint - transferAmount)
+    balanceAfterTransferAccount3
+    |> should equal (balanceBeforeTransferAccount3 + transferAmount)
+    votesBeforeTransfer
+    |> should equal (toMint |> int)
+    votesAfterTransfer
+    |> should equal ((toMint - transferAmount) |> int)
     
-//     // EVENTS
-//     let event = approveTxr.DecodeAllEvents<Contracts.gFRYContract.ApprovalEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.owner |> should equal hardhatAccount2
-//     event.spender |> should equal hardhatAccount3
-//     event.amount |> should equal transferAmount
+    // EVENTS
+    let event = (Contracts.gFRYContract.ApprovalEventDTO.DecodeAllEvents approveTxr) |> Seq.head
+    event.owner |> should equal hardhatAccount2
+    event.spender |> should equal hardhatAccount3
+    event.amount |> should equal transferAmount
 
-//     let event = transferFromTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.from |> should equal hardhatAccount2
-//     event._to |> should equal hardhatAccount3
-//     event.amount |> should equal transferAmount
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents transferFromTxr) |> Seq.head
+    event.from |> should equal hardhatAccount2
+    event._to |> should equal hardhatAccount3
+    event.amount |> should equal transferAmount
 
-//     let event = transferFromTxr.DecodeAllEvents<Contracts.CompContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event._delegate |> should equal hardhatAccount3
-//     event._previousBalance |> should equal balanceBeforeTransferAccout2
-//     event._newBalance |> should equal (toMintInt - transferAmount)
+    let event = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents transferFromTxr) |> Seq.head
+    event._delegate |> should equal hardhatAccount3
+    event._previousBalance |> should equal balanceBeforeTransferAccout2
+    event._newBalance |> should equal (toMint - transferAmount)
     
-// [<Specification("gFry", "transferFrom", 5)>]
-// [<Fact>]
-// let ``Deployer can transferFrom without approval and voting power is updated accordingly`` () =
-//     restore ()
+[<Specification("gFry", "transferFrom", 5)>]
+[<Fact>]
+let ``Deployer can transferFrom without approval and voting power is updated accordingly`` () =
+    restore ()
 
-//     let toMintHex = "4E20"; // int 20,000
-//     let toMintInt = bigint 20000
-//     let transferAmount = bigint 5000;
+    let toMint = bigint 20000
+    let transferAmount = bigint 5000;
 
-//     let connection = ethConn.GetWeb3
-//     let gFryCon1 = Contracts.gFRYContract(connection)
-//     let gFryAddress = gFryCon1.Address
-//     let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
+    let connection = ethConn.GetWeb3
+    let gFryCon1 = Contracts.gFRYContract(connection)
+    let gFryAddress = gFryCon1.Address
+    let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
 
-//     let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMintHex) // 20,000
-//     mintTx2 |> shouldSucceed
+    let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMint) // 20,000
+    mintTx2 |> shouldSucceed
 
-//     let balanceBeforeTransferAccout2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-//     let balanceBeforeTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let balanceBeforeTransferAccout2 = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let balanceBeforeTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
 
-//     let delegateTxr =
-//         Contracts.CompContract.delegateFunction(delegatee = hardhatAccount3)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryAddress) gFryAddress
+    let delegateInput = gFryCon1.delegateTransactionInput(string hardhatAccount3)
+    delegateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address
+    delegateInput.To <- gFryCon1.Address
+    let delegateTxr = ethConn.MakeImpersonatedCallWithNoEther delegateInput
 
-//     let votesBeforeTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let votesBeforeTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
 
-//     // Transfer with deployer address
-//     let transferFromTxr =
-//         Contracts.gFRYContract.transferFromFunction(_src = hardhatAccount2, _dst = hardhatAccount3, _rawAmount = transferAmount)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount gFryAddress) gFryAddress
+    let transferInput = gFryCon1.transferFromTransactionInput(string hardhatAccount2, string hardhatAccount3, bigint (transferAmount |> int))
+    transferInput.From <- mapInlineDataArgumentToAddress hardhatAccount gFryCon1.Address
+    transferInput.To <- gFryCon1.Address
+    let transferFromTxr = ethConn.MakeImpersonatedCallWithNoEther transferInput
 
-//     let votesAfterTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let votesAfterTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
         
-//     let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-//     let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
 
-//     // STATE
-//     balanceAfterTransferAccount2 
-//     |> should equal (toMintInt - transferAmount)
-//     balanceAfterTransferAccount3
-//     |> should equal (balanceBeforeTransferAccount3 + transferAmount)
-//     votesBeforeTransfer
-//     |> should equal (toMintInt |> int)
-//     votesAfterTransfer
-//     |> should equal ((toMintInt - transferAmount) |> int)
+    // STATE
+    balanceAfterTransferAccount2 
+    |> should equal (toMint - transferAmount)
+    balanceAfterTransferAccount3
+    |> should equal (balanceBeforeTransferAccount3 + transferAmount)
+    votesBeforeTransfer
+    |> should equal (toMint |> int)
+    votesAfterTransfer
+    |> should equal ((toMint - transferAmount) |> int)
     
-//     // EVENTS
-//     let event = transferFromTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.from |> should equal hardhatAccount2
-//     event._to |> should equal hardhatAccount3
-//     event.amount |> should equal transferAmount
+    // EVENTS
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents transferFromTxr) |> Seq.head
+    event.from |> should equal hardhatAccount2
+    event._to |> should equal hardhatAccount3
+    event.amount |> should equal transferAmount
 
-//     let event = transferFromTxr.DecodeAllEvents<Contracts.CompContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event._delegate |> should equal hardhatAccount3
-//     event._previousBalance |> should equal balanceBeforeTransferAccout2
-//     event._newBalance |> should equal (toMintInt - transferAmount)
+    let event = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents transferFromTxr) |> Seq.head
+    event._delegate |> should equal hardhatAccount3
+    event._previousBalance |> should equal balanceBeforeTransferAccout2
+    event._newBalance |> should equal (toMint - transferAmount)
 
 
-// [<Specification("Governator", "constructor", 0)>]
-// [<Fact>]
-// let ``Constructor initiates with correct values`` () =
-//     restore ()
+[<Specification("Governator", "constructor", 0)>]
+[<Fact>]
+let ``Constructor initiates with correct values`` () =
+    restore ()
 
-//     let connection = ethConn.GetWeb3
-//     let fryCon = Contracts.FRYContract(connection)
-//     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
 
-//     let gFryAddress = governatorCon.gFryQuery()
-//     let governatorFryAddress = governatorCon.FRYQuery()
-//     let fryAddress = fryCon.Address
-//     let addressLength = 42 
+    let gFryAddress = governatorCon.gFryQuery()
+    let governatorFryAddress = governatorCon.FRYQuery()
+    let fryAddress = fryCon.Address
+    let addressLength = 42 
 
-//     // STATE
-//     governatorFryAddress 
-//     |> should equal fryAddress
-//     gFryAddress.Length
-//     |> should equal addressLength // Any address with correct length
+    // STATE
+    governatorFryAddress 
+    |> should equal fryAddress
+    gFryAddress.Length
+    |> should equal addressLength // Any address with correct length
     
 
-// [<Specification("Governator", "governate", 0)>]
-// [<Fact>]
-// let ``Can not mint gFry without giving governator Fry allowance`` () =
-//     restore ()
+[<Specification("Governator", "governate", 0)>]
+[<Fact>]
+let ``Can not mint gFry without giving governator Fry allowance`` () =
+    restore ()
 
-//     let connection = ethConn.GetWeb3
-//     let fryCon = Contracts.FRYContract(connection)
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
     
-//     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
-//     let gFryAddress = (governatorCon.gFryQuery())
-//     let gFryContract = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let balanceOfFunction = gFryContract.GetFunction("balanceOf")
-//     let totalSupplyFunction = gFryContract.GetFunction("totalSupply")
-//     let amountOfFryToMint = bigint 1000
-//     let gFryBuyAmount = bigint 400
-//     let zero = 0
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let gFryAddress = (governatorCon.gFryQuery())
+    let gFryContract = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let balanceOfFunction = gFryContract.GetFunction("balanceOf")
+    let totalSupplyFunction = gFryContract.GetFunction("totalSupply")
+    let amountOfFryToMint = bigint 1000
+    let gFryBuyAmount = bigint 400
+    let zero = 0
 
-//     fryCon.mint(hardhatAccount2, amountOfFryToMint)
-//     |> shouldSucceed
-//     fryCon.balanceOfQuery(hardhatAccount2)
-//     |> should equal amountOfFryToMint
+    fryCon.mint(hardhatAccount2, amountOfFryToMint)
+    |> shouldSucceed
+    fryCon.balanceOfQuery(hardhatAccount2)
+    |> should equal amountOfFryToMint
 
-//     try
-//         let governateTxr =
-//             Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
-//             |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
-//         failwith "Should not be able get gFry without giving allowance"
-//     with ex ->
-//         // RETURNS
-//         ex.Message.ToLowerInvariant().Contains("transfer amount exceeds allowance")
-//         |> should equal true
+    try
+        let governateInput = governatorCon.governateTransactionInput(bigint (gFryBuyAmount |> int))
+        governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
+        governateInput.To <- governatorCon.Address
+        let governateTxr = ethConn.MakeImpersonatedCallWithNoEther governateInput
+
+        failwith "Should not be able get gFry without giving allowance"
+    with ex ->
+        // RETURNS
+        ex.Message.ToLowerInvariant().Contains("transfer amount exceeds allowance")
+        |> should equal true
    
-//     // STATE
-//     let balanceAfterTransfer = fryCon.balanceOfQuery(hardhatAccount2)
-//     balanceAfterTransfer |> should equal amountOfFryToMint
-//     let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
-//     gFryBalance |> should equal zero
-//     let gFryTotalSupply= totalSupplyFunction.CallAsync<int>() |> runNow
-//     gFryTotalSupply |> should equal zero
+    // STATE
+    let balanceAfterTransfer = fryCon.balanceOfQuery(hardhatAccount2)
+    balanceAfterTransfer |> should equal amountOfFryToMint
+    let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+    gFryBalance |> should equal zero
+    let gFryTotalSupply= totalSupplyFunction.CallAsync<int>() |> runNow
+    gFryTotalSupply |> should equal zero
 
 
-// [<Specification("Governator", "governate", 1)>]
-// [<Fact>]
-// let ``Can not get gFry without having Fry`` () =
-//     restore ()
+[<Specification("Governator", "governate", 1)>]
+[<Fact>]
+let ``Can not get gFry without having Fry`` () =
+    restore ()
 
-//     let connection = ethConn.GetWeb3
-//     let fryCon = Contracts.FRYContract(connection)
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
     
-//     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
-//     let gFryAddress = (governatorCon.gFryQuery())
-//     let gFryContract = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let balanceOfFunction = gFryContract.GetFunction("balanceOf")
-//     let totalSupplyFunction = gFryContract.GetFunction("totalSupply")
-//     let gFryBuyAmount = bigint 400
-//     let zero = 0
-//     let zeroBigInt = bigint 0
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let gFryAddress = (governatorCon.gFryQuery())
+    let gFryContract = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let balanceOfFunction = gFryContract.GetFunction("balanceOf")
+    let totalSupplyFunction = gFryContract.GetFunction("totalSupply")
+    let gFryBuyAmount = bigint 400
+    let zero = 0
+    let zeroBigInt = bigint 0
 
-//     let approveTxr =
-//         Contracts.FRYContract.approveFunction(amount = gFryBuyAmount, spender = governatorCon.Address)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address) fryCon.Address
-//     approveTxr |> shouldSucceed
+    let approveInput = fryCon.approveTransactionInput(string governatorCon.Address, bigint (gFryBuyAmount |> int))
+    approveInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address
+    approveInput.To <- fryCon.Address
+    let approveTxr = ethConn.MakeImpersonatedCallWithNoEther approveInput
 
-//     try
-//         let governateTxr =
-//             Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
-//             |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
-//         failwith "Should not be able to get gFry without having Fry"
-//     with ex ->
-//         // RETURNS
-//         ex.Message.ToLowerInvariant().Contains("transfer amount exceeds balance")
-//         |> should equal true
+    try
+        let governateInput = governatorCon.governateTransactionInput(bigint (gFryBuyAmount |> int))
+        governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
+        governateInput.To <- governatorCon.Address
+        let governateTxr = ethConn.MakeImpersonatedCallWithNoEther governateInput
+        
+        failwith "Should not be able to get gFry without having Fry"
+    with ex ->
+        // RETURNS
+        ex.Message.ToLowerInvariant().Contains("transfer amount exceeds balance")
+        |> should equal true
 
-//     // STATE
-//     let balanceAfterTransfer = fryCon.balanceOfQuery(hardhatAccount2)
-//     balanceAfterTransfer |> should equal zeroBigInt
-//     let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
-//     gFryBalance |> should equal zero
-//     let gFryTotalSupply= totalSupplyFunction.CallAsync<int>() |> runNow
-//     gFryTotalSupply |> should equal zero
+    // STATE
+    let balanceAfterTransfer = fryCon.balanceOfQuery(hardhatAccount2)
+    balanceAfterTransfer |> should equal zeroBigInt
+    let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+    gFryBalance |> should equal zero
+    let gFryTotalSupply= totalSupplyFunction.CallAsync<int>() |> runNow
+    gFryTotalSupply |> should equal zero
     
-// [<Specification("Governator", "governate", 2)>]
-// [<Fact>]
-// let ``Governator can accept FRY in exchange for gFry`` () =
-//     restore ()
+[<Specification("Governator", "governate", 2)>]
+[<Fact>]
+let ``Governator can accept FRY in exchange for gFry`` () =
+    restore ()
 
-//     let connection = ethConn.GetWeb3
-//     let fryCon = Contracts.FRYContract(connection)
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
     
-//     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
     
-//     let amountOfFryToMint = bigint 1000
-//     let gFryBuyAmount = bigint 400
+    let amountOfFryToMint = bigint 1000
+    let gFryBuyAmount = bigint 400
     
-//     let gFryAddress = (governatorCon.gFryQuery())
-//     let gFryCon = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let balanceOfFunction = gFryCon.GetFunction("balanceOf")
-//     let totalSupplyFunction = gFryCon.GetFunction("totalSupply")
+    let gFryAddress = (governatorCon.gFryQuery())
+    let gFryCon = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let balanceOfFunction = gFryCon.GetFunction("balanceOf")
+    let totalSupplyFunction = gFryCon.GetFunction("totalSupply")
 
-//     fryCon.mint(hardhatAccount2, amountOfFryToMint)
-//     |> shouldSucceed
+    fryCon.mint(hardhatAccount2, amountOfFryToMint)
+    |> shouldSucceed
 
-//     let approveTxr =
-//         Contracts.FRYContract.approveFunction(amount = gFryBuyAmount, spender = governatorCon.Address)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address) fryCon.Address
+    let approveInput = fryCon.approveTransactionInput(string governatorCon.Address, bigint (gFryBuyAmount |> int))
+    approveInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address
+    approveInput.To <- fryCon.Address
+    let approveTxr = ethConn.MakeImpersonatedCallWithNoEther approveInput
 
-//     let governateTxr =
-//         Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
+    let governateInput = governatorCon.governateTransactionInput(bigint (gFryBuyAmount |> int))
+    governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
+    governateInput.To <- governatorCon.Address
+    let governateTxr = ethConn.MakeImpersonatedCallWithNoEther governateInput
 
-//     let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+    let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
 
-//     // STATE
-//     gFryBalance |> should equal (gFryBuyAmount |> int)
-//     fryCon.balanceOfQuery(hardhatAccount2)
-//     |> should equal (amountOfFryToMint - gFryBuyAmount)
-//     fryCon.balanceOfQuery(governatorCon.Address)
-//     |> should equal gFryBuyAmount
-//     let gFryTotalSupply= totalSupplyFunction.CallAsync<int>() |> runNow
-//     (gFryTotalSupply|> bigint) |> should equal gFryBuyAmount 
+    // STATE
+    gFryBalance |> should equal (gFryBuyAmount |> int)
+    fryCon.balanceOfQuery(hardhatAccount2)
+    |> should equal (amountOfFryToMint - gFryBuyAmount)
+    fryCon.balanceOfQuery(governatorCon.Address)
+    |> should equal gFryBuyAmount
+    let gFryTotalSupply= totalSupplyFunction.CallAsync<int>() |> runNow
+    (gFryTotalSupply|> bigint) |> should equal gFryBuyAmount 
 
-//     // EVENTS
-//     let event = approveTxr.DecodeAllEvents<Contracts.FRYContract.ApprovalEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.owner |> should equal hardhatAccount2
-//     event.spender |> should equal governatorCon.Address
-//     event.value |> should equal gFryBuyAmount
+    // EVENTS
+    let event = (Contracts.gFRYContract.ApprovalEventDTO.DecodeAllEvents approveTxr) |> Seq.head
+    event.owner |> should equal hardhatAccount2
+    event.spender |> should equal governatorCon.Address
+    event.amount |> should equal gFryBuyAmount
 
-//     let event = governateTxr.DecodeAllEvents<Contracts.FRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(0)
-//     event.from |> should equal hardhatAccount2
-//     event._to |> should equal governatorCon.Address
-//     event.value |> should equal gFryBuyAmount
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents governateTxr) |> Seq.head
+    event.from |> should equal hardhatAccount2
+    event._to |> should equal governatorCon.Address
+    event.amount |> should equal gFryBuyAmount
 
-//     let event = governateTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(1)
-//     event.from |> should equal zeroAddress
-//     event._to |> should equal hardhatAccount2
-//     event.amount |> should equal gFryBuyAmount
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents governateTxr) |> Seq.item(1)
+    event.from |> should equal zeroAddress
+    event._to |> should equal hardhatAccount2
+    event.amount |> should equal gFryBuyAmount
 
-// [<Specification("Governator", "governate", 3)>]
-// [<Fact>]
-// let ``Governator can accept FRY in exchange for gFry and delegatee voting power is updated accordingly`` () =
-//     restore ()
+[<Specification("Governator", "governate", 3)>]
+[<Fact>]
+let ``Governator can accept FRY in exchange for gFry and delegatee voting power is updated accordingly`` () =
+    restore ()
 
-//     let connection = ethConn.GetWeb3
-//     let fryCon = Contracts.FRYContract(connection)
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
     
-//     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
-//     let gFryAddress = (governatorCon.gFryQuery())
-//     let gFryCon = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let contract = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let balanceOfFunction = contract.GetFunction("balanceOf")
-//     let totalSupplyFunction = gFryCon.GetFunction("totalSupply")
-//     let getVotesOfFunction = gFryCon.GetFunction("getCurrentVotes")
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let gFryAddress = (governatorCon.gFryQuery())
+    let gFryCon = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let gFryCon2 = getGFryContract()
+    let contract = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let balanceOfFunction = contract.GetFunction("balanceOf")
+    let totalSupplyFunction = gFryCon.GetFunction("totalSupply")
+    let getVotesOfFunction = gFryCon.GetFunction("getCurrentVotes")
 
-//     let amountOfFryToMint = bigint 1000
-//     let gFryBuyAmount = bigint 400
+    let amountOfFryToMint = bigint 1000
+    let gFryBuyAmount = bigint 400
     
-//     fryCon.mint(hardhatAccount2, amountOfFryToMint)
-//     |> shouldSucceed
+    fryCon.mint(hardhatAccount2, amountOfFryToMint)
+    |> shouldSucceed
 
-//     let gFryAddress = (governatorCon.gFryQuery())
+    let gFryAddress = (governatorCon.gFryQuery())
 
-//     let approveTxr =
-//         Contracts.FRYContract.approveFunction(amount = gFryBuyAmount, spender = governatorCon.Address)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address) fryCon.Address
+    let approveInput = fryCon.approveTransactionInput(string governatorCon.Address, bigint (gFryBuyAmount |> int))
+    approveInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address
+    approveInput.To <- fryCon.Address
+    let approveTxr = ethConn.MakeImpersonatedCallWithNoEther approveInput
 
-//     let votesBeforeGovernate = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let votesBeforeGovernate = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
 
-//     let delegateTxr =
-//         Contracts.gFRYContract.delegateFunction(delegatee = hardhatAccount3)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryAddress) gFryAddress
+    let delegateInput = gFryCon2.delegateTransactionInput(string hardhatAccount3)
+    delegateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon.Address
+    delegateInput.To <- gFryCon.Address
+    let delegateTxr = ethConn.MakeImpersonatedCallWithNoEther delegateInput
 
-//     let governateTxr =
-//         Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
+    let governateInput = governatorCon.governateTransactionInput(bigint (gFryBuyAmount |> int))
+    governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
+    governateInput.To <- governatorCon.Address
+    let governateTxr = ethConn.MakeImpersonatedCallWithNoEther governateInput
 
-//     let votesAfterGovernate = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let votesAfterGovernate = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
 
-//     let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
-//     let gFryTotalSupply= totalSupplyFunction.CallAsync<int>() |> runNow
+    let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+    let gFryTotalSupply= totalSupplyFunction.CallAsync<int>() |> runNow
 
-//     // STATE
-//     votesAfterGovernate |> should equal (gFryBuyAmount |> int)
-//     gFryBalance |> should equal (gFryBuyAmount |> int)
-//     fryCon.balanceOfQuery(hardhatAccount2)
-//     |> should equal (amountOfFryToMint - gFryBuyAmount)
-//     fryCon.balanceOfQuery(governatorCon.Address)
-//     |> should equal gFryBuyAmount
-//     gFryTotalSupply |> should equal (gFryBuyAmount |> int)
+    // STATE
+    votesAfterGovernate |> should equal (gFryBuyAmount |> int)
+    gFryBalance |> should equal (gFryBuyAmount |> int)
+    fryCon.balanceOfQuery(hardhatAccount2)
+    |> should equal (amountOfFryToMint - gFryBuyAmount)
+    fryCon.balanceOfQuery(governatorCon.Address)
+    |> should equal gFryBuyAmount
+    gFryTotalSupply |> should equal (gFryBuyAmount |> int)
 
-//     // EVENTS
-//     let event = approveTxr.DecodeAllEvents<Contracts.FRYContract.ApprovalEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.owner |> should equal hardhatAccount2
-//     event.spender |> should equal governatorCon.Address
-//     event.value |> should equal gFryBuyAmount
+    // EVENTS
+    let event = (Contracts.gFRYContract.ApprovalEventDTO.DecodeAllEvents approveTxr) |> Seq.head
+    event.owner |> should equal hardhatAccount2
+    event.spender |> should equal governatorCon.Address
+    event.amount |> should equal gFryBuyAmount
 
-//     let event = governateTxr.DecodeAllEvents<Contracts.FRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(0)
-//     event.from |> should equal hardhatAccount2
-//     event._to |> should equal governatorCon.Address
-//     event.value |> should equal gFryBuyAmount
+    let event = (Contracts.FRYContract.TransferEventDTO.DecodeAllEvents governateTxr) |> Seq.item(0)
+    event.from |> should equal hardhatAccount2
+    event._to |> should equal governatorCon.Address
+    event.value |> should equal gFryBuyAmount
 
-//     let event = governateTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(1)
-//     event.from |> should equal zeroAddress
-//     event._to |> should equal hardhatAccount2
-//     event.amount |> should equal gFryBuyAmount
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents governateTxr) |> Seq.item(1)
+    event.from |> should equal zeroAddress
+    event._to |> should equal hardhatAccount2
+    event.amount |> should equal gFryBuyAmount
 
-//     let event = governateTxr.DecodeAllEvents<Contracts.gFRYContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(0)
-//     event._delegate |> should equal hardhatAccount3
-//     event._previousBalance |> should equal (votesBeforeGovernate |> bigint)
-//     event._newBalance |> should equal (votesAfterGovernate |> bigint)
+    let event = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents governateTxr) |> Seq.head
+    event._delegate |> should equal hardhatAccount3
+    event._previousBalance |> should equal (votesBeforeGovernate |> bigint)
+    event._newBalance |> should equal (votesAfterGovernate |> bigint)
 
 
-// [<Specification("Governator", "degovernate", 0)>]
-// [<Fact>]
-// let ``Governator can not degovernate if user does not have sufficient gFry balance`` () =
-//     restore ()
+[<Specification("Governator", "degovernate", 0)>]
+[<Fact>]
+let ``Governator can not degovernate if user does not have sufficient gFry balance`` () =
+    restore ()
 
-//     // First give the account some gFry
+    // First give the account some gFry
 
-//     let connection = ethConn.GetWeb3
-//     let fryCon = Contracts.FRYContract(connection)
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
     
-//     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
-//     let amountOfFryToMint = bigint 1000
-//     let gFryBuyAmount = bigint 400
-//     let zero = bigint 0
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let amountOfFryToMint = bigint 1000
+    let gFryBuyAmount = bigint 400
+    let zero = bigint 0
 
-//     fryCon.mint(hardhatAccount2, amountOfFryToMint)
-//     |> shouldSucceed
+    fryCon.mint(hardhatAccount2, amountOfFryToMint)
+    |> shouldSucceed
 
-//     let gFryAddress = (governatorCon.gFryQuery())
+    let gFryAddress = (governatorCon.gFryQuery())
 
-//     let approveTxr =
-//         Contracts.FRYContract.approveFunction(amount = gFryBuyAmount, spender = governatorCon.Address)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address) fryCon.Address
+    let approveInput = fryCon.approveTransactionInput(string governatorCon.Address, bigint (gFryBuyAmount |> int))
+    approveInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address
+    approveInput.To <- fryCon.Address
+    let approveTxr = ethConn.MakeImpersonatedCallWithNoEther approveInput
 
-//     let governateTxr =
-//         Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
+    let governateInput = governatorCon.governateTransactionInput(bigint (gFryBuyAmount |> int))
+    governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
+    governateInput.To <- governatorCon.Address
+    let governateTxr = ethConn.MakeImpersonatedCallWithNoEther governateInput
 
-//     let gFry = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let balanceOfFunction = gFry.GetFunction("balanceOf")
-//     let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+    let gFry = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let balanceOfFunction = gFry.GetFunction("balanceOf")
+    let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
 
-//     gFryBalance |> should equal (gFryBuyAmount |> int)
-//     let accFryBalance = fryCon.balanceOfQuery(hardhatAccount2)
-//     accFryBalance |> should equal (amountOfFryToMint - gFryBuyAmount)
-//     let govFryBalance = fryCon.balanceOfQuery(governatorCon.Address)
-//     govFryBalance |> should equal gFryBuyAmount
+    gFryBalance |> should equal (gFryBuyAmount |> int)
+    let accFryBalance = fryCon.balanceOfQuery(hardhatAccount2)
+    accFryBalance |> should equal (amountOfFryToMint - gFryBuyAmount)
+    let govFryBalance = fryCon.balanceOfQuery(governatorCon.Address)
+    govFryBalance |> should equal gFryBuyAmount
 
-//     // Now degovernate
+    // Now degovernate
 
-//     let amountOfgFryToDegovernate = bigint 500 // This is more than the user has
+    let amountOfgFryToDegovernate = bigint 500 // This is more than the user has
 
-//     try
-//         let governateTxr =
-//             Contracts.GovernatorContract.degovernateFunction(_amount = amountOfgFryToDegovernate)
-//             |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
-//         failwith "Should not be able to degovernate without suffienct gFry balance"
-//     with ex ->
-//         // RETURNS
-//         ex.Message.ToLowerInvariant().Contains("transfer amount exceeds balance")
-//         |> should equal true
+    try
+        let governateInput = governatorCon.degovernateTransactionInput(bigint (amountOfgFryToDegovernate |> int))
+        governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
+        governateInput.To <- governatorCon.Address
+        let degovernateTxr = ethConn.MakeImpersonatedCallWithNoEther governateInput
+        
+        failwith "Should not be able to degovernate without suffienct gFry balance"
+    with ex ->
+        // RETURNS
+        ex.Message.ToLowerInvariant().Contains("transfer amount exceeds balance")
+        |> should equal true
     
-//     // STATE
-//     let gFryBalanceAfterDegovernate = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
-//     gFryBalanceAfterDegovernate |> should equal ((gFryBalance) |> int)
-//     fryCon.balanceOfQuery(hardhatAccount2)
-//     |> should equal (accFryBalance)
+    // STATE
+    let gFryBalanceAfterDegovernate = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+    gFryBalanceAfterDegovernate |> should equal ((gFryBalance) |> int)
+    fryCon.balanceOfQuery(hardhatAccount2)
+    |> should equal (accFryBalance)
 
 
-// [<Specification("Governator", "degovernate", 1)>]
-// [<Fact>]
-// let ``Governator can accept gFry in exchange for Fry`` () =
-//     restore ()
+[<Specification("Governator", "degovernate", 1)>]
+[<Fact>]
+let ``Governator can accept gFry in exchange for Fry`` () =
+    restore ()
 
-//     // First give the account some gFry
+    // First give the account some gFry
 
-//     let connection = ethConn.GetWeb3
-//     let fryCon = Contracts.FRYContract(connection)
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
     
-//     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
-//     let amountOfFryToMint = bigint 1000
-//     let gFryBuyAmount = bigint 400
-//     let gFryAddress = (governatorCon.gFryQuery())
-//     let gFryCon = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let totalSupplyFunction = gFryCon.GetFunction("totalSupply")
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let gFryAddress = (governatorCon.gFryQuery())
+    let gFryCon = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let totalSupplyFunction = gFryCon.GetFunction("totalSupply")
+    let amountOfFryToMint = bigint 1000
+    let gFryBuyAmount = bigint 400
+    let zero = bigint 0
 
-//     fryCon.mint(hardhatAccount2, amountOfFryToMint)
-//     |> shouldSucceed
+    fryCon.mint(hardhatAccount2, amountOfFryToMint)
+    |> shouldSucceed
 
-//     let approveTxr =
-//         Contracts.FRYContract.approveFunction(amount = gFryBuyAmount, spender = governatorCon.Address)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address) fryCon.Address
+    let approveInput = fryCon.approveTransactionInput(string governatorCon.Address, bigint (gFryBuyAmount |> int))
+    approveInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address
+    approveInput.To <- fryCon.Address
+    let approveTxr = ethConn.MakeImpersonatedCallWithNoEther approveInput
 
-//     let governateTxr =
-//         Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
+    let governateInput = governatorCon.governateTransactionInput(bigint (gFryBuyAmount |> int))
+    governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
+    governateInput.To <- governatorCon.Address
+    let governateTxr = ethConn.MakeImpersonatedCallWithNoEther governateInput
 
-//     let gFry = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let balanceOfFunction = gFry.GetFunction("balanceOf")
-//     let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
-//     let gFryTotalSupplyBefore = totalSupplyFunction.CallAsync<int>() |> runNow
+    let gFry = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let balanceOfFunction = gFry.GetFunction("balanceOf")
+    let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
 
-//     gFryBalance |> should equal (gFryBuyAmount |> int)
-//     let accFryBalance = fryCon.balanceOfQuery(hardhatAccount2)
-//     accFryBalance |> should equal (amountOfFryToMint - gFryBuyAmount)
-//     let govFryBalance = fryCon.balanceOfQuery(governatorCon.Address)
-//     govFryBalance |> should equal gFryBuyAmount
-//     gFryTotalSupplyBefore |> should equal (gFryBuyAmount |> int)
+    gFryBalance |> should equal (gFryBuyAmount |> int)
+    let accFryBalance = fryCon.balanceOfQuery(hardhatAccount2)
+    accFryBalance |> should equal (amountOfFryToMint - gFryBuyAmount)
+    let govFryBalance = fryCon.balanceOfQuery(governatorCon.Address)
+    govFryBalance |> should equal gFryBuyAmount
 
-//     let event = approveTxr.DecodeAllEvents<Contracts.FRYContract.ApprovalEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.owner |> should equal hardhatAccount2
-//     event.spender |> should equal governatorCon.Address
-//     event.value |> should equal gFryBuyAmount
+    // Now degovernate
 
-//     let event = governateTxr.DecodeAllEvents<Contracts.FRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(0)
-//     event.from |> should equal hardhatAccount2
-//     event._to |> should equal governatorCon.Address
-//     event.value |> should equal gFryBuyAmount
+    let amountOfgFryToDegovernate = bigint 150
 
-//     let event = governateTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(1)
-//     event.from |> should equal zeroAddress
-//     event._to |> should equal hardhatAccount2
-//     event.amount |> should equal gFryBuyAmount
-
-//     // Now degovernate
-
-//     let amountOfgFryToDegovernate = bigint 150
-
-//     let degovernateTxr =
-//         Contracts.GovernatorContract.degovernateFunction(_amount = amountOfgFryToDegovernate)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
+    let governateInput = governatorCon.degovernateTransactionInput(bigint (amountOfgFryToDegovernate |> int))
+    governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
+    governateInput.To <- governatorCon.Address
+    let degovernateTxr = ethConn.MakeImpersonatedCallWithNoEther governateInput
     
-//     let gFryBalanceAfterDegovernate = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
-//     let gFryTotalSupplyAfter = totalSupplyFunction.CallAsync<int>() |> runNow
+    let gFryBalanceAfterDegovernate = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+    let gFryTotalSupplyAfter = totalSupplyFunction.CallAsync<int>() |> runNow
 
-//     // STATE
-//     gFryBalanceAfterDegovernate |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
-//     fryCon.balanceOfQuery(hardhatAccount2)
-//     |> should equal (accFryBalance + amountOfgFryToDegovernate)
-//     gFryTotalSupplyAfter |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
+    // STATE
+    gFryBalanceAfterDegovernate |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
+    fryCon.balanceOfQuery(hardhatAccount2)
+    |> should equal (accFryBalance + amountOfgFryToDegovernate)
+    gFryTotalSupplyAfter |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
 
-//     // EVENTS
-//     let event = degovernateTxr.DecodeAllEvents<Contracts.FRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(0)
-//     event.from |> should equal hardhatAccount2
-//     event._to |> should equal governatorCon.Address
-//     event.value |> should equal amountOfgFryToDegovernate
+    // EVENTS
+    let event = (Contracts.FRYContract.TransferEventDTO.DecodeAllEvents degovernateTxr) |> Seq.head
+    event.from |> should equal hardhatAccount2
+    event._to |> should equal governatorCon.Address
+    event.value |> should equal amountOfgFryToDegovernate
 
-//     let event = degovernateTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(1)
-//     event.from |> should equal governatorCon.Address
-//     event._to |> should equal zeroAddress
-//     event.amount |> should equal amountOfgFryToDegovernate
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents degovernateTxr) |> Seq.item(1)
+    event.from |> should equal governatorCon.Address
+    event._to |> should equal zeroAddress
+    event.amount |> should equal amountOfgFryToDegovernate
 
 
-// [<Specification("Governator", "degovernate", 2)>]
-// [<Fact>]
-// let ``Governator can accept gFry in exchange for Fry and delegatee voting power is updated accordingly`` () =
-//     restore ()
+[<Specification("Governator", "degovernate", 2)>]
+[<Fact>]
+let ``Governator can accept gFry in exchange for Fry and delegatee voting power is updated accordingly`` () =
+    restore ()
 
-//     // First give the account some gFry
+    // First give the account some gFry
 
-//     let connection = ethConn.GetWeb3
-//     let fryCon = Contracts.FRYContract(connection)
+    let connection = ethConn.GetWeb3
+    let fryCon = Contracts.FRYContract(connection)
     
-//     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
+    let gFryAddress = (governatorCon.gFryQuery())
+    let gFryCon = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let gFryCon2 = getGFryContract()
+    let totalSupplyFunction = gFryCon.GetFunction("totalSupply")
+    let amountOfFryToMint = bigint 1000
+    let gFryBuyAmount = bigint 400
+    let zero = bigint 0
 
-//     let gFryAddress = (governatorCon.gFryQuery())
-//     let gFryCon = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-//     let totalSupplyFunction = gFryCon.GetFunction("totalSupply")
+    fryCon.mint(hardhatAccount2, amountOfFryToMint)
+    |> shouldSucceed
 
-//     let amountOfFryToMint = bigint 1000
-//     let gFryBuyAmount = bigint 400
+    let approveInput = fryCon.approveTransactionInput(string governatorCon.Address, bigint (gFryBuyAmount |> int))
+    approveInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address
+    approveInput.To <- fryCon.Address
+    let approveTxr = ethConn.MakeImpersonatedCallWithNoEther approveInput
 
-//     fryCon.mint(hardhatAccount2, amountOfFryToMint)
-//     |> shouldSucceed
+    let governateInput = governatorCon.governateTransactionInput(bigint (gFryBuyAmount |> int))
+    governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
+    governateInput.To <- governatorCon.Address
+    let governateTxr = ethConn.MakeImpersonatedCallWithNoEther governateInput
 
-//     let approveTxr =
-//         Contracts.FRYContract.approveFunction(amount = gFryBuyAmount, spender = governatorCon.Address)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 fryCon.Address) fryCon.Address
+    let gFry = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
+    let balanceOfFunction = gFry.GetFunction("balanceOf")
+    let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
 
-//     let governateTxr =
-//         Contracts.GovernatorContract.governateFunction(_amount = gFryBuyAmount)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
+    gFryBalance |> should equal (gFryBuyAmount |> int)
+    let accFryBalance = fryCon.balanceOfQuery(hardhatAccount2)
+    accFryBalance |> should equal (amountOfFryToMint - gFryBuyAmount)
+    let govFryBalance = fryCon.balanceOfQuery(governatorCon.Address)
+    govFryBalance |> should equal gFryBuyAmount
 
-//     let balanceOfFunction = gFryCon.GetFunction("balanceOf")
-//     let gFryBalance = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
-//     let gFryTotalSupplyBefore = totalSupplyFunction.CallAsync<int>() |> runNow
-
-//     gFryBalance |> should equal (gFryBuyAmount |> int)
-//     let accFryBalance = fryCon.balanceOfQuery(hardhatAccount2)
-//     accFryBalance |> should equal (amountOfFryToMint - gFryBuyAmount)
-//     let govFryBalance = fryCon.balanceOfQuery(governatorCon.Address)
-//     govFryBalance |> should equal gFryBuyAmount
-//     gFryTotalSupplyBefore |> should equal (gFryBuyAmount |> int)
-
-//     let event = approveTxr.DecodeAllEvents<Contracts.FRYContract.ApprovalEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.head
-//     event.owner |> should equal hardhatAccount2
-//     event.spender |> should equal governatorCon.Address
-//     event.value |> should equal gFryBuyAmount
-
-//     let event = governateTxr.DecodeAllEvents<Contracts.FRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(0)
-//     event.from |> should equal hardhatAccount2
-//     event._to |> should equal governatorCon.Address
-//     event.value |> should equal gFryBuyAmount
-
-//     let event = governateTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(1)
-//     event.from |> should equal zeroAddress
-//     event._to |> should equal hardhatAccount2
-//     event.amount |> should equal gFryBuyAmount
-
-//     // Delegate
+    // Delegate
     
-//     let getVotesOfFunction = gFryCon.GetFunction("getCurrentVotes")
-//     let currentVotesAccount3 = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let getVotesOfFunction = gFryCon.GetFunction("getCurrentVotes")
+    let currentVotesAccount3 = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
 
-//     let delegateTxr =
-//         Contracts.gFRYContract.delegateFunction(delegatee = hardhatAccount3)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 gFryAddress) gFryAddress
+    let delegateInput = gFryCon2.delegateTransactionInput(string hardhatAccount3)
+    delegateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon.Address
+    delegateInput.To <- gFryCon.Address
+    let delegateTxr = ethConn.MakeImpersonatedCallWithNoEther delegateInput
 
-//     let currentVotesAccount3BeforeDegov = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let currentVotesAccount3BeforeDegov = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
 
-//     // Degovernate
+    // Now Degovernate
 
-//     let amountOfgFryToDegovernate = bigint 150
-
-//     let degovernateTxr =
-//         Contracts.GovernatorContract.degovernateFunction(_amount = amountOfgFryToDegovernate)
-//         |> ethConn.MakeImpersonatedCallWithNoEther (mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address) governatorCon.Address
+    let amountOfgFryToDegovernate = bigint 150
     
-//     // STATE
-//     let gFryBalanceAfterDegovernate = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
-//     gFryBalanceAfterDegovernate |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
-//     let currentVotesAccount3 = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
-//     currentVotesAccount3 |> should equal (currentVotesAccount3BeforeDegov - (amountOfgFryToDegovernate |> int))
-//     let gFryTotalSupplyAfter = totalSupplyFunction.CallAsync<int>() |> runNow
-//     gFryTotalSupplyAfter |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
-//     fryCon.balanceOfQuery(hardhatAccount2)
-//     |> should equal (accFryBalance + amountOfgFryToDegovernate)
+    let governateInput = governatorCon.degovernateTransactionInput(bigint (amountOfgFryToDegovernate |> int))
+    governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
+    governateInput.To <- governatorCon.Address
+    let degovernateTxr = ethConn.MakeImpersonatedCallWithNoEther governateInput
 
-//     // EVENTS
-//     let event = degovernateTxr.DecodeAllEvents<Contracts.FRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(0)
-//     event.from |> should equal hardhatAccount2
-//     event._to |> should equal governatorCon.Address
-//     event.value |> should equal amountOfgFryToDegovernate
+    // STATE
+    let gFryBalanceAfterDegovernate = balanceOfFunction.CallAsync<int>(hardhatAccount2) |> runNow
+    gFryBalanceAfterDegovernate |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
+    let currentVotesAccount3 = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    currentVotesAccount3 |> should equal (currentVotesAccount3BeforeDegov - (amountOfgFryToDegovernate |> int))
+    let gFryTotalSupplyAfter = totalSupplyFunction.CallAsync<int>() |> runNow
+    gFryTotalSupplyAfter |> should equal ((gFryBuyAmount - amountOfgFryToDegovernate) |> int)
+    fryCon.balanceOfQuery(hardhatAccount2)
+    |> should equal (accFryBalance + amountOfgFryToDegovernate)
 
-//     let event = degovernateTxr.DecodeAllEvents<Contracts.gFRYContract.TransferEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(1)
-//     event.from |> should equal governatorCon.Address
-//     event._to |> should equal zeroAddress
-//     event.amount |> should equal amountOfgFryToDegovernate
+    // EVENTS
+    let event = (Contracts.FRYContract.TransferEventDTO.DecodeAllEvents degovernateTxr) |> Seq.head
+    event.from |> should equal hardhatAccount2
+    event._to |> should equal governatorCon.Address
+    event.value |> should equal amountOfgFryToDegovernate
 
-//     let event = degovernateTxr.DecodeAllEvents<Contracts.gFRYContract.DelegateVotesChangedEventDTO>() |> Seq.map (fun i -> i.Event) |> Seq.item(0)
-//     event._delegate |> should equal hardhatAccount3
-//     event._previousBalance |> should equal (currentVotesAccount3BeforeDegov |> bigint)
-//     event._newBalance |> should equal ((currentVotesAccount3BeforeDegov - (amountOfgFryToDegovernate |> int))|> bigint)
+    let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents degovernateTxr) |> Seq.item(1)
+    event.from |> should equal governatorCon.Address
+    event._to |> should equal zeroAddress
+    event.amount |> should equal amountOfgFryToDegovernate
+
+    let event = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents degovernateTxr) |> Seq.head
+    event._delegate |> should equal hardhatAccount3
+    event._previousBalance |> should equal (currentVotesAccount3BeforeDegov |> bigint)
+    event._newBalance |> should equal ((currentVotesAccount3BeforeDegov - (amountOfgFryToDegovernate |> int))|> bigint)
