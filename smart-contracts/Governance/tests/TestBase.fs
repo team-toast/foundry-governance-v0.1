@@ -250,7 +250,7 @@ type Debug(ethConn: EthereumConnection) =
         this.DebugContract.forward(toAddress, data.HexToByteArray())
 
     member this.DecodeForwardedEvents(receipt: TransactionReceipt) =
-        receipt.DecodeAllEvents<Contracts.DebugContract.ForwardedEventDTO>() |> Seq.map (fun i -> i.Event)
+        Contracts.DebugContract.ForwardedEventDTO.DecodeAllEvents receipt
         
 
     member this.BlockTimestamp:BigInteger = 
