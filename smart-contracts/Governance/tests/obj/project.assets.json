@@ -5125,19 +5125,19 @@
     ]
   },
   "packageFolders": {
-    "/home/ubuntu/.nuget/packages/": {}
+    "/Users/sjalq/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/ubuntu/Desktop/work/GovernanceTokenGateway/smart-contracts/Governance/tests/Tests.fsproj",
+      "projectUniqueName": "/Users/sjalq/git/foundry-governance-v0.1/smart-contracts/Governance/tests/Tests.fsproj",
       "projectName": "Tests",
-      "projectPath": "/home/ubuntu/Desktop/work/GovernanceTokenGateway/smart-contracts/Governance/tests/Tests.fsproj",
-      "packagesPath": "/home/ubuntu/.nuget/packages/",
-      "outputPath": "/home/ubuntu/Desktop/work/GovernanceTokenGateway/smart-contracts/Governance/tests/obj/",
+      "projectPath": "/Users/sjalq/git/foundry-governance-v0.1/smart-contracts/Governance/tests/Tests.fsproj",
+      "packagesPath": "/Users/sjalq/.nuget/packages/",
+      "outputPath": "/Users/sjalq/git/foundry-governance-v0.1/smart-contracts/Governance/tests/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/ubuntu/.nuget/NuGet/NuGet.Config"
+        "/Users/sjalq/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "netcoreapp5.0"
@@ -5162,7 +5162,6 @@
             "generatePathProperty": true
           },
           "FSharp.Core": {
-            "include": "Runtime, Compile, Build, Native, Analyzers, BuildTransitive",
             "target": "Package",
             "version": "[5.0.0, )",
             "generatePathProperty": true
@@ -5235,8 +5234,24 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/5.0.400/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/5.0.103/RuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU3028",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'AbiTypeProvider.Common 0.0.4' from source 'https://api.nuget.org/v3/index.json': The repository primary signature's timestamp found a chain building issue: ExplicitDistrust: The trust setting for this policy was set to Deny.",
+      "libraryId": "AbiTypeProvider.Common"
+    },
+    {
+      "code": "NU3028",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'AbiTypeProvider 0.0.4' from source 'https://api.nuget.org/v3/index.json': The repository primary signature's timestamp found a chain building issue: ExplicitDistrust: The trust setting for this policy was set to Deny.",
+      "libraryId": "AbiTypeProvider"
+    }
+  ]
 }
