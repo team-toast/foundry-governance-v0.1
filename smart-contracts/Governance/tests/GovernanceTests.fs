@@ -74,13 +74,15 @@ let ``Can't mint to the zero address`` () =
     should equal zero (gFryCon.balanceOfQuery(zeroAddress))
 
 [<Specification("gFry", "mint", 3)>]
-[<Fact>]
-let ``Deployer can mint positive amount`` () =
+[<Theory>]
+[<InlineData(10)>]
+[<InlineData(0)>]
+let ``Deployer can mint positive amount`` amount =
     restore ()
 
     let gFryCon = Contracts.gFRYContract(ethConn.GetWeb3)
     let zero = bigint 0;
-    let mintAmountBigInt = bigint 10;
+    let mintAmountBigInt = (amount |> toE18)// bigint 10;
     let mintTx = gFryCon.mint(hardhatAccount,  mintAmountBigInt)
     mintTx |> shouldSucceed
 
@@ -136,6 +138,7 @@ let ``Deployer can mint and voting power is updated accordingly`` () =
     event._previousBalance |> should equal (votesBeforeMint |> bigint)
     event._newBalance |> should equal (votesAfterMint |> bigint)
 
+
 [<Specification("gFry", "burn", 0)>]
 [<Fact>]
 let ``Account with zero balance can't burn`` () =
@@ -188,13 +191,15 @@ let ``Account with non zero balance can't burn more tokens than they have`` () =
         totalSupplyAfterBurn |> should equal (toMint*(2 |> bigint))
 
 [<Specification("gFry", "burn", 2)>]
-[<Fact>]
-let ``Account with positive balance can burn`` () =
+[<Theory>]
+[<InlineData(1000000, 1000)>]
+[<InlineData(0, 0)>]
+let ``Account with positive balance can burn`` (amountToMint, amountToBurn) =
     restore ()
 
     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-    let toMint = bigint 100
-    let burnAmount = bigint 10;
+    let toMint = amountToMint |> bigint
+    let burnAmount = amountToBurn |> bigint
 
     let mintTx = gFryConnection.mint(hardhatAccount,  toMint)
     mintTx |> shouldSucceed
@@ -220,13 +225,15 @@ let ``Account with positive balance can burn`` () =
 
 
 [<Specification("gFry", "burn", 3)>]
-[<Fact>]
-let ``Account with positive balance can burn and voting power is updated accordingly`` () =
+[<Theory>]
+[<InlineData(1000000, 1000)>]
+[<InlineData(10, 1)>]
+let ``Account with positive balance can burn and voting power is updated accordingly`` (amountToMint, amountToBurn) =
     restore ()
 
     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-    let toMint = bigint 10000
-    let burnAmount = bigint 5000;
+    let toMint = amountToMint |> bigint
+    let burnAmount = amountToBurn |> bigint
 
     let mintTx = gFryConnection.mint(hardhatAccount,  toMint)
     mintTx |> shouldSucceed
@@ -626,8 +633,10 @@ let ``Can not get gFry without having Fry`` () =
     gFryTotalSupply |> should equal zero
     
 [<Specification("Governator", "governate", 2)>]
-[<Fact>]
-let ``Governator can accept FRY in exchange for gFry`` () =
+[<Theory>]
+[<InlineData(1000000, 1000)>]
+[<InlineData(10, 0)>]
+let ``Governator can accept FRY in exchange for gFry`` (amountToMint, amountToBuy) =
     restore ()
 
     let connection = ethConn.GetWeb3
@@ -635,8 +644,8 @@ let ``Governator can accept FRY in exchange for gFry`` () =
     
     let governatorCon = Contracts.GovernatorContract(connection, fryCon.Address)
     
-    let amountOfFryToMint = bigint 1000
-    let gFryBuyAmount = bigint 400
+    let amountOfFryToMint = amountToMint |> bigint
+    let gFryBuyAmount = amountToBuy |> bigint
     
     let gFryAddress = (governatorCon.gFryQuery())
     let gFryCon = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
@@ -682,6 +691,7 @@ let ``Governator can accept FRY in exchange for gFry`` () =
     event.from |> should equal zeroAddress
     event._to |> should equal hardhatAccount2
     event.amount |> should equal gFryBuyAmount
+
 
 [<Specification("Governator", "governate", 3)>]
 [<Fact>]
@@ -825,8 +835,10 @@ let ``Governator can not degovernate if user does not have sufficient gFry balan
 
 
 [<Specification("Governator", "degovernate", 1)>]
-[<Fact>]
-let ``Governator can accept gFry in exchange for Fry`` () =
+[<Theory>]
+[<InlineData(1000000, 1000)>]
+[<InlineData(10, 0)>]
+let ``Governator can accept gFry in exchange for Fry`` (gFryToMint, degovAmount) =
     restore ()
 
     // First give the account some gFry
@@ -838,8 +850,8 @@ let ``Governator can accept gFry in exchange for Fry`` () =
     let gFryAddress = (governatorCon.gFryQuery())
     let gFryCon = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
     let totalSupplyFunction = gFryCon.GetFunction("totalSupply")
-    let amountOfFryToMint = bigint 1000
-    let gFryBuyAmount = bigint 400
+    let amountOfFryToMint = gFryToMint |> bigint
+    let gFryBuyAmount = gFryToMint |> bigint
     let zero = bigint 0
 
     fryCon.mint(hardhatAccount2, amountOfFryToMint)
@@ -867,7 +879,7 @@ let ``Governator can accept gFry in exchange for Fry`` () =
 
     // Now degovernate
 
-    let amountOfgFryToDegovernate = bigint 150
+    let amountOfgFryToDegovernate = degovAmount |> bigint
 
     let governateInput = governatorCon.degovernateTransactionInput(bigint (amountOfgFryToDegovernate |> int))
     governateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 governatorCon.Address
