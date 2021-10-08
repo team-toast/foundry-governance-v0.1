@@ -5,8 +5,11 @@ import "hardhat/console.sol";
 
 contract gFRY is Comp 
 {
-    address public governator;
+    string public constant name = "Governance FRY";
+    string public constant symbol = "GFRY";
     uint public totalSupply  = 10000000e18;
+
+    address public governator;
 
     constructor() 
         public 
