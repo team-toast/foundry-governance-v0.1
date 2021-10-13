@@ -117,14 +117,14 @@ let ``Deployer can mint and voting power is updated accordingly`` () =
     let mintTx2 = gFryCon.mint(hardhatAccount2,  toMint)
     mintTx2|> shouldSucceed
     
-    let mainAcctVotesAfterMint = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
+    let votesAfterMint = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
     let totalSupplyAfterMint = gFryCon.totalSupplyQuery()
 
     // STATE
     totalSupplyBeforeMint |> should equal (zero |> bigint)
     totalSupplyAfterMint |> should equal (toMint*(2 |> bigint))
     votesBeforeMint |> should equal (zero)
-    mainAcctVotesAfterMint |> should equal ((toMint) |> int)
+    votesAfterMint |> should equal ((toMint) |> int)
 
     // EVENTS
     let event1 = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents mintTx) |> Seq.head
@@ -135,7 +135,7 @@ let ``Deployer can mint and voting power is updated accordingly`` () =
     let event2 = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents mintTx) |> Seq.head
     event2._delegate |> should equal hardhatAccount
     event2._previousBalance |> should equal (votesBeforeMint |> bigint)
-    event2._newBalance |> should equal (mainAcctVotesAfterMint |> bigint)
+    event2._newBalance |> should equal (votesAfterMint |> bigint)
 
 
 [<Specification("gFry", "burn", 0)>]
