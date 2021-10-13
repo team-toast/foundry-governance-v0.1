@@ -109,7 +109,7 @@ let ``Deployer can mint and voting power is updated accordingly`` () =
     delegateTx |> shouldSucceed
     let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryCon.Address) // Why create a gFryCon2?
     let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
-    let mainAcctVotesBeforeMint = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
+    let votesBeforeMint = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
     let totalSupplyBeforeMint = gFryCon.totalSupplyQuery()
     
     let mintTx = gFryCon.mint(hardhatAccount,  toMint)
@@ -123,7 +123,7 @@ let ``Deployer can mint and voting power is updated accordingly`` () =
     // STATE
     totalSupplyBeforeMint |> should equal (zero |> bigint)
     totalSupplyAfterMint |> should equal (toMint*(2 |> bigint))
-    mainAcctVotesBeforeMint |> should equal (zero)
+    votesBeforeMint |> should equal (zero)
     mainAcctVotesAfterMint |> should equal ((toMint) |> int)
 
     // EVENTS
@@ -134,7 +134,7 @@ let ``Deployer can mint and voting power is updated accordingly`` () =
 
     let event2 = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents mintTx) |> Seq.head
     event2._delegate |> should equal hardhatAccount
-    event2._previousBalance |> should equal (mainAcctVotesBeforeMint |> bigint)
+    event2._previousBalance |> should equal (votesBeforeMint |> bigint)
     event2._newBalance |> should equal (mainAcctVotesAfterMint |> bigint)
 
 
