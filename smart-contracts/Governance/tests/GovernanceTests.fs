@@ -1,6 +1,7 @@
 module GovernanceTests
 
 open System
+open System.Numerics
 open Xunit
 open FsUnit.Xunit
 open FsUnit.CustomMatchers
@@ -10,6 +11,7 @@ open Nethereum.Web3.Accounts
 open Nethereum.Contracts
 open SolidityTypes
 open AbiTypeProvider.Common
+open Constants
 
 
 type System.String with
@@ -84,19 +86,19 @@ let ``Deployer can mint positive amount`` amount =
     restore ()
 
     let gFryCon = Contracts.gFRYContract(ethConn.GetWeb3)
-    let mintAmountBigInt = (amount |> toE18)
-    let mintTx = gFryCon.mint(hardhatAccount,  mintAmountBigInt)
+    let mintAmount = (amount |> toE18)
+    let mintTx = gFryCon.mint(hardhatAccount,  mintAmount)
     mintTx |> shouldSucceed
 
     // EVENTS
     let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents mintTx) |> Seq.head
     event.from |> should equal zeroAddress
     event._to |> should equal hardhatAccount
-    event.amount |> should equal mintAmountBigInt
+    event.amount |> should equal mintAmount
 
     // STATE
-    should equal mintAmountBigInt (gFryCon.balanceOfQuery(hardhatAccount))
-    should equal mintAmountBigInt (gFryCon.totalSupplyQuery())
+    should equal mintAmount (gFryCon.balanceOfQuery(hardhatAccount))
+    should equal mintAmount (gFryCon.totalSupplyQuery())
     
 [<Specification("gFry", "mint", 4)>]
 [<Fact>]
@@ -274,7 +276,7 @@ let ``Non deployer can't transfer without allowance`` () =
     restore () 
     
     let gFryCon = getGFryContract()
-    let account = Account(hardhatPrivKey) // Not immediately clear to me that this is a "non deployer". Why not use hardhatAccount2?
+    let account = Account(hardhatPrivKey)
     let toMint = bigint 100
     let transferAmount = bigint 10
     let zero = bigint 0  
@@ -334,7 +336,7 @@ let ``Cannot transfer more than uint96 max`` () =
     restore ()
 
     let gFryConnection = Contracts.gFRYContract(ethConn.GetWeb3)
-    let hugeNumber = 10000000000000000000.0 |> toE18 // Would be cleaner to exactly specify uint96 max (2^96)
+    let hugeNumber = BigInteger.Pow(2 |> bigint, 96) // uint96 max
     let toMint = bigint 100;
 
     let mintTx = gFryConnection.mint(hardhatAccount,  toMint)
@@ -380,15 +382,15 @@ let ``Non deployer can transferFrom when approved`` () =
     transferInput.To <- gFryCon1.Address
     let transferFromTxr = ethConn.MakeImpersonatedCallWithNoEther transferInput
 
-    let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-    let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let account2balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let account3balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount3)
 
     let allowanceAfter = gFryCon1.allowanceQuery(hardhatAccount2, hardhatAccount3)
 
     // STATE
     allowanceAfter |> should equal zero
-    balanceAfterTransferAccount2 |> should equal (toMint - transferAmount)
-    balanceAfterTransferAccount3 |> should equal transferAmount
+    account2balanceAfterTransfer |> should equal (toMint - transferAmount)
+    account3balanceAfterTransfer |> should equal transferAmount
     
     // EVENTS
     let event = (Contracts.gFRYContract.ApprovalEventDTO.DecodeAllEvents approveTxr) |> Seq.head
@@ -421,15 +423,15 @@ let ``Non deployer can transferFrom when approved and msg.sender is the src addr
     transferInput.To <- gFryCon1.Address
     let transferFromTxr = ethConn.MakeImpersonatedCallWithNoEther transferInput
         
-    let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-    let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let account2balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let account3balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount3)
 
     let allowanceAfter = gFryCon1.allowanceQuery(hardhatAccount2, hardhatAccount3)
 
     // STATE
     allowanceAfter |> should equal zero
-    balanceAfterTransferAccount2 |> should equal (toMint - transferAmount)
-    balanceAfterTransferAccount3 |> should equal transferAmount
+    account2balanceAfterTransfer |> should equal (toMint - transferAmount)
+    account3balanceAfterTransfer |> should equal transferAmount
     
     let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents transferFromTxr) |> Seq.head
     event.from |> should equal hardhatAccount2
@@ -453,12 +455,11 @@ let ``Non deployer can transferFrom when approved and voting power is updated ac
     approveInput.To <- gFryCon1.Address
     let approveTxr = ethConn.MakeImpersonatedCallWithNoEther approveInput
 
-    // Where is mintTx1?
-    let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMint)
-    mintTx2 |> shouldSucceed
+    let mintTx = gFryCon1.mint(hardhatAccount2,  toMint)
+    mintTx |> shouldSucceed
 
-    let balanceBeforeTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-    let balanceBeforeTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let account2BalanceBeforeTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let account3BalanceBeforeTransfer = gFryCon1.balanceOfQuery(hardhatAccount3)
 
     let delegateInput = gFryCon1.delegateTransactionInput(string hardhatAccount3)
     delegateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address
@@ -474,17 +475,17 @@ let ``Non deployer can transferFrom when approved and voting power is updated ac
 
     let account3VotesAfterTransfer = gFryCon1.getCurrentVotesQuery(hardhatAccount3)
         
-    let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-    let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let account2balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let account3balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount3)
 
     let allowanceAfter = gFryCon1.allowanceQuery(hardhatAccount2, hardhatAccount3)
 
     // STATE
     allowanceAfter |> should equal zero
-    balanceAfterTransferAccount2 |> should equal (toMint - transferAmount)
-    balanceAfterTransferAccount3 |> should equal (balanceBeforeTransferAccount3 + transferAmount)
-    account3VotesBeforeTransfer |> should equal toMint // Why should this be true? We never mint for account 3...
-    account3VotesAfterTransfer |> should equal (toMint - transferAmount) // Also confusing. Didn't we transfer TO account 3, so should have more voting power?
+    account2balanceAfterTransfer |> should equal (toMint - transferAmount)
+    account3balanceAfterTransfer |> should equal (account3BalanceBeforeTransfer + transferAmount)
+    account3VotesBeforeTransfer |> should equal toMint // All voting power is assiged to account 3 by account 2
+    account3VotesAfterTransfer |> should equal (toMint - transferAmount) // tokens are transfered away from acount 2 so the voting power delegated to account 3 should decrease
     
     // EVENTS
     let event = (Contracts.gFRYContract.ApprovalEventDTO.DecodeAllEvents approveTxr) |> Seq.head
@@ -499,8 +500,8 @@ let ``Non deployer can transferFrom when approved and voting power is updated ac
 
     let event = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents transferFromTxr) |> Seq.head
     event._delegate |> should equal hardhatAccount3
-    event._previousBalance |> should equal balanceBeforeTransferAccount2
-    event._newBalance |> should equal (toMint - transferAmount) // Again, not clear why this should be true...
+    event._previousBalance |> should equal account2BalanceBeforeTransfer
+    event._newBalance |> should equal (toMint - transferAmount) 
     
 [<Specification("gFry", "transferFrom", 6)>]
 [<Fact>]
@@ -514,11 +515,11 @@ let ``Deployer can transferFrom without approval and voting power is updated acc
     let connection = ethConn.GetWeb3
     let gFryCon1 = Contracts.gFRYContract(connection)
 
-    let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMint) // Again, where is mintTx1?
-    mintTx2 |> shouldSucceed
+    let mintTx = gFryCon1.mint(hardhatAccount2,  toMint) 
+    mintTx |> shouldSucceed
 
-    let balanceBeforeTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-    let balanceBeforeTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let account2BalanceBeforeTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let account3BalanceBeforeTransfer = gFryCon1.balanceOfQuery(hardhatAccount3)
 
     let delegateInput = gFryCon1.delegateTransactionInput(string hardhatAccount3)
     delegateInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address
@@ -534,17 +535,17 @@ let ``Deployer can transferFrom without approval and voting power is updated acc
 
     let account3VotesAfterTransfer = gFryCon1.getCurrentVotesQuery(hardhatAccount3)
         
-    let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
-    let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
+    let account2balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount2)
+    let account3balanceAfterTransfer = gFryCon1.balanceOfQuery(hardhatAccount3)
 
     let allowanceAfter = gFryCon1.allowanceQuery(hardhatAccount2, hardhatAccount3)
 
     // STATE
     allowanceAfter |> should equal zero
-    balanceAfterTransferAccount2 |> should equal (toMint - transferAmount)
-    balanceAfterTransferAccount3 |> should equal (balanceBeforeTransferAccount3 + transferAmount)
+    account2balanceAfterTransfer |> should equal (toMint - transferAmount)
+    account3balanceAfterTransfer |> should equal (account3BalanceBeforeTransfer + transferAmount)
     account3VotesBeforeTransfer |> should equal toMint
-    account3VotesAfterTransfer |> should equal (toMint - transferAmount) // Again, seems like this should be a + ..?
+    account3VotesAfterTransfer |> should equal (toMint - transferAmount)
     
     // EVENTS
     let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents transferFromTxr) |> Seq.head
@@ -554,7 +555,7 @@ let ``Deployer can transferFrom without approval and voting power is updated acc
 
     let event = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents transferFromTxr) |> Seq.head
     event._delegate |> should equal hardhatAccount3
-    event._previousBalance |> should equal balanceBeforeTransferAccount2
+    event._previousBalance |> should equal account2BalanceBeforeTransfer
     event._newBalance |> should equal (toMint - transferAmount)
 
 
