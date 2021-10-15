@@ -39,14 +39,17 @@ let ``Non gFry deployer account can not mint`` () =
     let mintAmount = bigint 10
     let zero = bigint 0;
 
-    let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
-    let data = gFryCon.mintData(account.Address, mintAmount)
+    try
+        let mintInput = gFryCon.mintTransactionInput(account.Address, mintAmount)
+        mintInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon.Address
+        mintInput.To <- gFryCon.Address
+        let governateTxr = ethConn.MakeImpersonatedCallWithNoEther mintInput
 
-    let receipt = debug.Forward(gFryCon.Address,  data)
-    let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
-
-    // RETURNS
-    forwardEvent |> shouldRevertWithMessage "Comp::_mint: That account cannot mint"
+        failwith "Non gFry deployer account should not be able to mint"
+    with ex ->
+        // RETURNS
+        ex.Message.ToLowerInvariant().Contains("that account cannot mint")
+        |> should equal true
     
     // STATE
     should equal zero (gFryCon.totalSupplyQuery())
@@ -81,8 +84,7 @@ let ``Deployer can mint positive amount`` amount =
     restore ()
 
     let gFryCon = Contracts.gFRYContract(ethConn.GetWeb3)
-    let zero = bigint 0;
-    let mintAmountBigInt = (amount |> toE18)// bigint 10;
+    let mintAmountBigInt = (amount |> toE18)
     let mintTx = gFryCon.mint(hardhatAccount,  mintAmountBigInt)
     mintTx |> shouldSucceed
 
@@ -107,9 +109,7 @@ let ``Deployer can mint and voting power is updated accordingly`` () =
 
     let delegateTx = gFryCon.delegateAsync(hardhatAccount) |> runNow
     delegateTx |> shouldSucceed
-    let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryCon.Address) // Why create a gFryCon2?
-    let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
-    let votesBeforeMint = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
+    let votesBeforeMint = gFryCon.getCurrentVotesQuery(hardhatAccount)
     let totalSupplyBeforeMint = gFryCon.totalSupplyQuery()
     
     let mintTx = gFryCon.mint(hardhatAccount,  toMint)
@@ -117,14 +117,14 @@ let ``Deployer can mint and voting power is updated accordingly`` () =
     let mintTx2 = gFryCon.mint(hardhatAccount2,  toMint)
     mintTx2|> shouldSucceed
     
-    let votesAfterMint = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
+    let votesAfterMint = gFryCon.getCurrentVotesQuery(hardhatAccount)
     let totalSupplyAfterMint = gFryCon.totalSupplyQuery()
 
     // STATE
     totalSupplyBeforeMint |> should equal (zero |> bigint)
     totalSupplyAfterMint |> should equal (toMint*(2 |> bigint))
-    votesBeforeMint |> should equal (zero)
-    votesAfterMint |> should equal ((toMint) |> int)
+    votesBeforeMint |> should equal (zero |> bigint)
+    votesAfterMint |> should equal toMint
 
     // EVENTS
     let event1 = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents mintTx) |> Seq.head
@@ -134,8 +134,8 @@ let ``Deployer can mint and voting power is updated accordingly`` () =
 
     let event2 = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents mintTx) |> Seq.head
     event2._delegate |> should equal hardhatAccount
-    event2._previousBalance |> should equal (votesBeforeMint |> bigint)
-    event2._newBalance |> should equal (votesAfterMint |> bigint)
+    event2._previousBalance |> should equal votesBeforeMint
+    event2._newBalance |> should equal votesAfterMint
 
 
 [<Specification("gFry", "burn", 0)>]
@@ -240,23 +240,22 @@ let ``Account with positive balance can burn and voting power is updated accordi
     mintTx2|> shouldSucceed
     let delegateTx = gFryConnection.delegateAsync(hardhatAccount) |> runNow
     delegateTx |> shouldSucceed
-    let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryConnection.Address)
-    let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
-    let votesBeforeBurn = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
+
+    let votesBeforeBurn = gFryConnection.getCurrentVotesQuery(hardhatAccount)
 
     let totalSupplyBeforeBurn = gFryConnection.totalSupplyQuery()
 
     let burnTx = gFryConnection.burn(burnAmount)
     burnTx |> shouldSucceed
     let balanceAfterBurn = gFryConnection.balanceOfQuery(hardhatAccount)
-    let votesAfterBurn = getVotesOfFunction.CallAsync<int>(hardhatAccount) |> runNow
+    let votesAfterBurn = gFryConnection.getCurrentVotesQuery(hardhatAccount)
     let totalSupplyAfterBurn = gFryConnection.totalSupplyQuery()
 
     // STATE
     balanceAfterBurn |> should equal (toMint - burnAmount)
     totalSupplyAfterBurn |> should equal (totalSupplyBeforeBurn - burnAmount)
-    votesBeforeBurn |> should equal (toMint |> int)
-    votesAfterBurn |> should equal ((toMint - burnAmount) |> int)
+    votesBeforeBurn |> should equal toMint
+    votesAfterBurn |> should equal (toMint - burnAmount)
 
     // EVENTS
     let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents burnTx) |> Seq.head
@@ -266,8 +265,8 @@ let ``Account with positive balance can burn and voting power is updated accordi
 
     let event = (Contracts.gFRYContract.DelegateVotesChangedEventDTO.DecodeAllEvents burnTx) |> Seq.head
     event._delegate |> should equal hardhatAccount
-    event._previousBalance |> should equal (votesBeforeBurn |> bigint)
-    event._newBalance |> should equal (votesAfterBurn |> bigint)
+    event._previousBalance |> should equal votesBeforeBurn
+    event._newBalance |> should equal votesAfterBurn
     
 [<Specification("gFry", "transferFrom", 0)>]
 [<Fact>]
@@ -277,18 +276,23 @@ let ``Non deployer can't transfer without allowance`` () =
     let gFryCon = getGFryContract()
     let account = Account(hardhatPrivKey) // Not immediately clear to me that this is a "non deployer". Why not use hardhatAccount2?
     let toMint = bigint 100
+    let transferAmount = bigint 10
     let zero = bigint 0  
 
     let mintTx = gFryCon.mint(account.Address,  toMint)
     mintTx |> shouldSucceed
 
-    let debug = Debug(EthereumConnection(hardhatURI, account.PrivateKey))
-    let data = gFryCon.transferFromData(account.Address, hardhatAccount2, bigint 10)
-    let receipt = debug.Forward(gFryCon.Address,  data)
+    try
+        let transferInput = gFryCon.transferFromTransactionInput(account.Address, hardhatAccount2, transferAmount)
+        transferInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon.Address
+        transferInput.To <- gFryCon.Address
+        let transferTxr = ethConn.MakeImpersonatedCallWithNoEther transferInput
 
-    // RETURNS
-    let forwardEvent = debug.DecodeForwardedEvents receipt |> Seq.head
-    forwardEvent |> shouldRevertWithMessage "Comp::transferFrom: transfer amount exceeds spender allowance"
+        failwith "Non gFry deployer account should not be able to mint"
+    with ex ->
+        // RETURNS
+        ex.Message.ToLowerInvariant().Contains("transfer amount exceeds spender allowance")
+        |> should equal true
 
     // STATE
     gFryCon.balanceOfQuery(account.Address) |> should equal toMint
@@ -443,9 +447,6 @@ let ``Non deployer can transferFrom when approved and voting power is updated ac
     
     let connection = ethConn.GetWeb3
     let gFryCon1 = Contracts.gFRYContract(connection)
-    let gFryAddress = gFryCon1.Address
-    let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-    let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
 
     let approveInput = gFryCon1.approveTransactionInput(string hardhatAccount3, bigint (transferAmount |> int))
     approveInput.From <- mapInlineDataArgumentToAddress hardhatAccount2 gFryCon1.Address
@@ -464,14 +465,14 @@ let ``Non deployer can transferFrom when approved and voting power is updated ac
     delegateInput.To <- gFryCon1.Address
     let delegateTxr = ethConn.MakeImpersonatedCallWithNoEther delegateInput
 
-    let account3VotesBeforeTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let account3VotesBeforeTransfer = gFryCon1.getCurrentVotesQuery(hardhatAccount3)
 
     let transferInput = gFryCon1.transferFromTransactionInput(string hardhatAccount2, string hardhatAccount3, bigint (transferAmount |> int))
     transferInput.From <- mapInlineDataArgumentToAddress hardhatAccount3 gFryCon1.Address
     transferInput.To <- gFryCon1.Address
     let transferFromTxr = ethConn.MakeImpersonatedCallWithNoEther transferInput
 
-    let account3VotesAfterTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let account3VotesAfterTransfer = gFryCon1.getCurrentVotesQuery(hardhatAccount3)
         
     let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
     let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
@@ -482,8 +483,8 @@ let ``Non deployer can transferFrom when approved and voting power is updated ac
     allowanceAfter |> should equal zero
     balanceAfterTransferAccount2 |> should equal (toMint - transferAmount)
     balanceAfterTransferAccount3 |> should equal (balanceBeforeTransferAccount3 + transferAmount)
-    account3VotesBeforeTransfer |> should equal (toMint |> int) // Why should this be true? We never mint for account 3...
-    account3VotesAfterTransfer |> should equal ((toMint - transferAmount) |> int) // Also confusing. Didn't we transfer TO account 3, so should have more voting power?
+    account3VotesBeforeTransfer |> should equal toMint // Why should this be true? We never mint for account 3...
+    account3VotesAfterTransfer |> should equal (toMint - transferAmount) // Also confusing. Didn't we transfer TO account 3, so should have more voting power?
     
     // EVENTS
     let event = (Contracts.gFRYContract.ApprovalEventDTO.DecodeAllEvents approveTxr) |> Seq.head
@@ -512,9 +513,6 @@ let ``Deployer can transferFrom without approval and voting power is updated acc
 
     let connection = ethConn.GetWeb3
     let gFryCon1 = Contracts.gFRYContract(connection)
-    let gFryAddress = gFryCon1.Address
-    let gFryCon2 = ethConn.Web3.Eth.GetContract(gFryAbiString, gFryAddress)
-    let getVotesOfFunction = gFryCon2.GetFunction("getCurrentVotes")
 
     let mintTx2 = gFryCon1.mint(hardhatAccount2,  toMint) // Again, where is mintTx1?
     mintTx2 |> shouldSucceed
@@ -527,14 +525,14 @@ let ``Deployer can transferFrom without approval and voting power is updated acc
     delegateInput.To <- gFryCon1.Address
     let delegateTxr = ethConn.MakeImpersonatedCallWithNoEther delegateInput
 
-    let account3VotesBeforeTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let account3VotesBeforeTransfer = gFryCon1.getCurrentVotesQuery(hardhatAccount3)
 
     let transferInput = gFryCon1.transferFromTransactionInput(string hardhatAccount2, string hardhatAccount3, bigint (transferAmount |> int))
     transferInput.From <- mapInlineDataArgumentToAddress hardhatAccount gFryCon1.Address
     transferInput.To <- gFryCon1.Address
     let transferFromTxr = ethConn.MakeImpersonatedCallWithNoEther transferInput
 
-    let account3VotesAfterTransfer = getVotesOfFunction.CallAsync<int>(hardhatAccount3) |> runNow
+    let account3VotesAfterTransfer = gFryCon1.getCurrentVotesQuery(hardhatAccount3)
         
     let balanceAfterTransferAccount2 = gFryCon1.balanceOfQuery(hardhatAccount2)
     let balanceAfterTransferAccount3 = gFryCon1.balanceOfQuery(hardhatAccount3)
@@ -545,8 +543,8 @@ let ``Deployer can transferFrom without approval and voting power is updated acc
     allowanceAfter |> should equal zero
     balanceAfterTransferAccount2 |> should equal (toMint - transferAmount)
     balanceAfterTransferAccount3 |> should equal (balanceBeforeTransferAccount3 + transferAmount)
-    account3VotesBeforeTransfer |> should equal (toMint |> int)
-    account3VotesAfterTransfer |> should equal ((toMint - transferAmount) |> int) // Again, seems like this should be a + ..?
+    account3VotesBeforeTransfer |> should equal toMint
+    account3VotesAfterTransfer |> should equal (toMint - transferAmount) // Again, seems like this should be a + ..?
     
     // EVENTS
     let event = (Contracts.gFRYContract.TransferEventDTO.DecodeAllEvents transferFromTxr) |> Seq.head
